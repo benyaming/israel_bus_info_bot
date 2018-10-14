@@ -1,5 +1,4 @@
 import settings
-import db
 import text_handler
 
 import telebot
