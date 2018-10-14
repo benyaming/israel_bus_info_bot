@@ -1,3 +1,4 @@
 pytelegrambotapi
 requests
 flask
+gunicorn
