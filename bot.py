@@ -1,8 +1,11 @@
+# -*- coding: utf-8 -*-
 import settings
 import text_handler
 
 import telebot
 from flask import Flask, request
+
+from time import sleep
 
 
 WEBHOOK_HOST = settings.BOT_HOST
@@ -48,6 +51,6 @@ if __name__ == '__main__':
         )
 
     else:
-        # bot.remove_webhook()
-        # sleep(2)
+        bot.remove_webhook()
+        sleep(1)
         bot.polling(True, timeout=50)

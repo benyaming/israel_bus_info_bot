@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import settings
 import bus_api
 
