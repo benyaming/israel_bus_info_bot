@@ -27,12 +27,10 @@ def webhook():
 
 @bot.message_handler(commands=['start'])
 def handle_start(message):
-    user_markup = telebot.types.ReplyKeyboardMarkup(True, False)
-    user_markup.row('Русский', 'English')
-    bot.send_message(message.from_user.id,
-                     'Выберите язык/Choose the language',
-                     reply_markup=user_markup
-                     )
+    bot.send_message(
+        message.from_user.id,
+        'Welcome! Input station ID'
+)
 
 
 @bot.message_handler(func=lambda message: True, content_types=['text'])
