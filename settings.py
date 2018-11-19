@@ -7,3 +7,4 @@ BOT_PORT = environ.get('BOT_PORT')
 URI = environ.get('URI')
 
 IS_SERVER = environ.get('IS_SERVER')
+logs_path = environ.get('logs_path')
