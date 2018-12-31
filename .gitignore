@@ -2,3 +2,9 @@
 \.idea/
 
 __pycache__/
+
+\.vscode/
+
+test\.py
+
+testaio\.py

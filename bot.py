@@ -33,7 +33,7 @@ def handle_start(message):
     bot.send_message(
         message.from_user.id,
         'Welcome! Input station ID'
-)
+    )
 
 
 @bot.message_handler(func=lambda message: True, content_types=['text'])
