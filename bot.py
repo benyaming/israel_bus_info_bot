@@ -7,10 +7,6 @@ from flask import Flask, request
 
 from time import sleep
 
-
-WEBHOOK_HOST = settings.BOT_HOST
-WEBHOOK_PORT = settings.BOT_PORT
-base_url = f'{WEBHOOK_HOST}:{WEBHOOK_PORT}'
 route_path = f'/{settings.URI}/'
 
 bot = telebot.TeleBot(settings.TOKEN)
@@ -41,11 +37,7 @@ def handle_text_message(message):
 
 
 if __name__ == '__main__':
-    if settings.IS_SERVER:
-        bot.remove_webhook()
-        bot.set_webhook(url=f'{base_url}{route_path}')
-
-    else:
+    if not settings.IS_SERVER:
         bot.remove_webhook()
         sleep(1)
         bot.polling(True, timeout=50)
