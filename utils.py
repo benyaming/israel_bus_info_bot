@@ -22,8 +22,7 @@ def get_cancel_button(redis_key: str):
 
 
 def update_message(data: dict, last_message=False):
-    bot = TeleBot('709546621:AAEIZIVW9EOXCno21PPe8AZnHxNc5KX5LDU')
-    # todo set env variables on production!
+    bot = TeleBot(settings.TOKEN)
     bus_data = get_bus_info(data['station'])['data']
     response = bus_data if not last_message else \
         f'{bus_data}\n\n*Message not updating!*'
@@ -56,17 +55,15 @@ def init_redis_tracking(user_id: int, station_id: int, message_id: int,
 
 
 def update_last_updated_ts(key: str):
-    r = Redis()
-    # todo redis params
+    r = Redis(settings.r_host, settings.r_port)
     r.hset(key, 'last_send', int(time()))
 
 
 def set_expired(key: str):
-    r = Redis()
-    # todo redis params
+    r = Redis(settings.r_host, settings.r_port)
     r.hset(key, 'expire', int(time()))
 
 
 def delete_key_from_redis(key: str):
-    r = Redis()  # todo redis params
+    r = Redis(settings.r_host, settings.r_port)
     r.delete(key)
