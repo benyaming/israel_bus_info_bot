@@ -2,3 +2,5 @@ pytelegrambotapi
 requests
 flask
 gunicorn
+celery
+redis

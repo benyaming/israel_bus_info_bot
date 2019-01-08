@@ -1,11 +1,10 @@
-
 import requests
 
 
 URL = 'http://mabat.mot.gov.il/AdalyaService.svc/StationLinesByIdGet'
 
 
-def get_bus_info(stop_id: int) -> str:
+def get_bus_info(stop_id: int) -> dict:
     json_data = {
         "stationId": stop_id,
         "isSIRI": True,
@@ -18,9 +17,11 @@ def get_bus_info(stop_id: int) -> str:
     )
 
     res = r.json()
-
-    lines = res['Payload']['Lines']
-    station_name = res['Payload']['StationInfo']['StationAddress']
+    try:
+        lines = res['Payload']['Lines']
+        station_name = res['Payload']['StationInfo']['StationName']
+    except TypeError:
+        return {'ok': False}
 
     buses = []
     for line in lines:
@@ -36,7 +37,7 @@ def get_bus_info(stop_id: int) -> str:
         target = i['target_city']
         time = f'{i["minutes"]} min' if i['minutes'] != 0 else 'now'
         if 'א' in i['bus_number']:
-            bus_str = f'\u200E🚌 `{bus_number:<5}`\u200E 🕓 {time:<7} ' \
+            bus_str = f'\u200E🚌 `{bus_number:<5}`\u200E 🕓 `{time:<7}` ' \
                       f'🏙️ \u200E{target}\u200E'
             bus_list.append(bus_str)
         else:
@@ -45,4 +46,4 @@ def get_bus_info(stop_id: int) -> str:
     response = '\n'.join(bus_list)
 
     # print(response)
-    return response
+    return {'ok': True, 'data': response}

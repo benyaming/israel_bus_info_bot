@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
-import settings
-import text_handler
+from time import sleep
 
 import telebot
 from flask import Flask, request
 
-from time import sleep
+import settings
+import text_handler
+from utils import set_expired
 
 route_path = f'/{settings.URI}/'
 
@@ -31,9 +32,15 @@ def handle_start(message):
 
 
 @bot.message_handler(func=lambda message: True, content_types=['text'])
-def handle_text_message(message):
+def handle_text_message(message: telebot.types.Message):
     bot.send_chat_action(message.from_user.id, 'typing')
-    text_handler.handle_text(message.from_user.id, message.text)
+    text_handler.TextHandler(message).verify_station_id()
+
+
+@bot.callback_query_handler(func=lambda call: True)
+def handle_call(call: telebot.types.CallbackQuery):
+    bot.answer_callback_query(call.id)
+    set_expired(call.data)
 
 
 if __name__ == '__main__':
