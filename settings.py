@@ -14,6 +14,7 @@ r_port = environ.get('r_port')
 
 rmq_user = environ.get('rmq_user')
 rmq_pass = environ.get('rmq_pass')
+rmq_host = environ.get('rmq_host')
 rmq_port = environ.get('rmq_port')
 
 PERIOD = environ.get('period')
