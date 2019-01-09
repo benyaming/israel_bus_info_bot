@@ -8,14 +8,13 @@ import settings
 import text_handler
 from utils import set_expired
 
-route_path = f'/{settings.URI}/'
 
 bot = telebot.TeleBot(settings.TOKEN)
 
 app = Flask(__name__)
 
 
-@app.route(route_path, methods=['POST'])
+@app.route('/', methods=['POST'])
 def webhook():
     json_string = request.get_data().decode('utf-8')
     update = telebot.types.Update.de_json(json_string)
