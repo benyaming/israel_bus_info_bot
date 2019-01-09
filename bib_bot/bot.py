@@ -5,7 +5,7 @@ import telebot
 from flask import Flask, request
 
 import settings
-import text_handler
+from bib_bot import text_handler
 from utils import set_expired
 
 route_path = f'/{settings.URI}/'

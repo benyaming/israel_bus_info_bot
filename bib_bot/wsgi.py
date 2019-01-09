@@ -1,4 +1,4 @@
-from bot import app
+from bib_bot.bot import app
 
 
 if __name__ == '__main__':
