@@ -4,18 +4,19 @@ from celery import Celery
 from redis import Redis
 
 import utils
-from settings import PERIOD, rmq_user, rmq_pass, rmq_port, rmq_host
+import settings
 
 
 app = Celery(
     'tasks',
-    broker=f'amqp://{rmq_user}:{rmq_pass}@{rmq_host}:{rmq_port}'
+    broker=f'amqp://{settings.rmq_user}:{settings.rmq_pass}@'
+           f'{settings.rmq_host}:{settings.rmq_port}'
 )
 
 
 @app.task
 def check_redis():
-    r = Redis()
+    r = Redis(host=settings.r_host, port=settings.r_port)
     keys = r.keys()
     for key in keys:
         expire = int(r.hget(key, 'expire').decode())
@@ -27,7 +28,7 @@ def check_redis():
             'station': int(r.hget(key, 'station').decode())
         }
         if int(time()) < expire:
-            if int(time()) - updated_ts > PERIOD:
+            if int(time()) - updated_ts > settings.PERIOD:
                 utils.update_last_updated_ts(key)
                 update_message.delay(data)
         else:
