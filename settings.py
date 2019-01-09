@@ -2,9 +2,6 @@ from os import environ
 
 
 TOKEN = environ.get('TOKEN')
-BOT_HOST = environ.get('BOT_HOST')
-BOT_PORT = environ.get('BOT_PORT')
-URI = environ.get('URI')
 
 IS_SERVER = environ.get('IS_SERVER')
 logs_path = environ.get('logs_path')
@@ -17,5 +14,5 @@ rmq_pass = environ.get('rmq_pass')
 rmq_host = environ.get('rmq_host')
 rmq_port = environ.get('rmq_port')
 
-PERIOD = environ.get('period')
-TTL = environ.get('ttl')
+PERIOD = int(environ.get('period'))
+TTL = int(environ.get('ttl'))

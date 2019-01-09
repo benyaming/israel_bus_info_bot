@@ -49,7 +49,7 @@ def init_redis_tracking(user_id: int, station_id: int, message_id: int,
         'station': station_id,
         'updated': int(time()),
         'message_id': message_id,
-        'expire': int(time()) + int(settings.TTL)
+        'expire': int(time()) + settings.TTL
     }
     r.hmset(redis_key, data)
 
