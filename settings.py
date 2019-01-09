@@ -14,5 +14,5 @@ rmq_pass = environ.get('rmq_pass')
 rmq_host = environ.get('rmq_host')
 rmq_port = environ.get('rmq_port')
 
-PERIOD = int(environ.get('period'))
-TTL = int(environ.get('ttl'))
+PERIOD = environ.get('period')
+TTL = environ.get('ttl')

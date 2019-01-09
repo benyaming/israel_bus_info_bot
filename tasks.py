@@ -28,7 +28,7 @@ def check_redis():
             'station': int(r.hget(key, 'station').decode())
         }
         if int(time()) < expire:
-            if int(time()) - updated_ts > settings.PERIOD:
+            if int(time()) - updated_ts > int(settings.PERIOD):
                 utils.update_last_updated_ts(key)
                 update_message.delay(data)
         else:
