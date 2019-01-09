@@ -4,10 +4,13 @@ from celery import Celery
 from redis import Redis
 
 import utils
-from settings import PERIOD
+from settings import PERIOD, rmq_user, rmq_pass, rmq_port
 
 
-app = Celery('tasks', broker='amqp://')
+app = Celery(
+    'tasks',
+    broker=f'amqp://{rmq_user}:{rmq_pass}@localhost:{rmq_port}'
+)
 
 
 @app.task
