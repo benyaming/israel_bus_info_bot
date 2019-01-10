@@ -5,6 +5,7 @@ from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 from telebot.apihelper import ApiException
 from telebot import TeleBot
 from redis import Redis
+import requests
 
 import settings
 from bus_api import get_bus_info
@@ -30,13 +31,14 @@ def update_message(data: dict, last_message=False):
     keyboard = get_cancel_button(data['redis_key']) if not last_message \
         else None
     try:
-        bot.edit_message_text(
-            response,
-            chat_id=data['user_id'],
-            message_id=data['message_id'],
-            parse_mode='Markdown',
-            reply_markup=keyboard
-        )
+        params = {
+            'chat_id': data['user_id'],
+            'message_id': data['message_id'],
+            'parse_mode': 'Markdown',
+            'reply_markup': keyboard.to_json()
+        }
+        url = f'https://api.telegram.org/bot{settings.TOKEN}/editmessagetext'
+        requests.get(url, params)
     except ApiException as e:
         print(e.result)
 
