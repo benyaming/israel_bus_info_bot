@@ -27,20 +27,19 @@ def update_message(data: dict, last_message=False):
     bus_data = get_bus_info(data['station'])['data']
     response = bus_data if not last_message else \
         f'{bus_data}\n\n*Message not updating!*'
-
+    params = {
+        'chat_id': data['user_id'],
+        'message_id': data['message_id'],
+        'parse_mode': 'Markdown',
+        'text': response
+    }
     keyboard = get_cancel_button(data['redis_key']) if not last_message \
         else None
-    try:
-        params = {
-            'chat_id': data['user_id'],
-            'message_id': data['message_id'],
-            'parse_mode': 'Markdown',
-            'reply_markup': keyboard.to_json()
-        }
-        url = f'https://api.telegram.org/bot{settings.TOKEN}/editmessagetext'
-        requests.get(url, params)
-    except ApiException as e:
-        print(e.result)
+    if keyboard:
+        params['reply_markup'] = keyboard.to_json()
+    url = f'https://api.telegram.org/bot{settings.TOKEN}/editmessagetext'
+    r = requests.get(url, params)
+    print(r.status_code)
 
 
 def init_redis_tracking(user_id: int, station_id: int, message_id: int,
