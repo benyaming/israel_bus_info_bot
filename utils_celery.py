@@ -3,7 +3,7 @@ from time import time
 from requests import get
 from redis import Redis
 
-from .bus_api_celery import get_lines
+from bus_api_celery import get_lines
 from utils import get_cancel_button
 from settings import TOKEN, R_HOST, R_PORT
 

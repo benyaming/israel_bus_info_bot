@@ -2,7 +2,7 @@ from time import time
 
 from celery import Celery
 from redis import Redis
-from .utils_celery import update_message, update_last_updated_ts, \
+from utils_celery import update_message, update_last_updated_ts, \
     delete_key_from_redis
 
 import settings
