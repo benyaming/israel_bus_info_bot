@@ -1,18 +1,20 @@
 from os import environ
 
 
-TOKEN = environ.get('TOKEN')
+TOKEN = '709546621:AAEIZIVW9EOXCno21PPe8AZnHxNc5KX5LDU'
+
+WEBAPP_HOST = environ.get('WEBAPP_HOST')
+WEBAPP_PORT = environ.get('WEBAPP_PORT')
 
 IS_SERVER = environ.get('IS_SERVER')
-logs_path = environ.get('logs_path')
 
-r_host = environ.get('r_host')
-r_port = environ.get('r_port')
+R_HOST = environ.get('R_HOST')
+R_PORT = environ.get('R_PORT')
 
-rmq_user = environ.get('rmq_user')
-rmq_pass = environ.get('rmq_pass')
-rmq_host = environ.get('rmq_host')
-rmq_port = environ.get('rmq_port')
+RMQ_USER = environ.get('RMQ_USER')
+RMQ_PASS = environ.get('RMQ_PASS')
+RMQ_HOST = environ.get('RMQ_HOST')
+RMQ_PORT = environ.get('RMQ_PORT')
 
-PERIOD = environ.get('period')
-TTL = environ.get('ttl')
+PERIOD = environ.get('PERIOD')
+TTL = environ.get('TTL')

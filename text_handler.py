@@ -1,50 +1,38 @@
-# -*- coding: utf-8 -*-
-from time import time
-
-from telebot import TeleBot
-from telebot.types import Message
-
-import settings
-import bus_api
-from utils import get_cancel_button, init_redis_tracking
+from bus_api import get_lines
 
 
-# todo user sent same station again
-
-
-class TextHandler(object):
-
-    def __init__(self, message: Message):
-        self._user_id = message.from_user.id
-        self._text = message.text
-        self._message_id = message.message_id
-        self._bot = TeleBot(settings.TOKEN)
-
-    def verify_station_id(self) -> None:
-        # todo check message before sending request
-        if self._text.isdigit():
-            station_id = int(self._text)
-            self._get_station_info(station_id)
+async def handle_text(text: str) -> dict:
+    """
+    Coro. Entrypoint for all text messages. Filters incorrect text
+    :param text: text from message
+    :return: text response: {'ok': True|False, 'data': bus_data|error mess}
+    """
+    response = {'ok': True}
+    # check if text correct
+    if text.isdigit():
+        bus_data = await get_lines(int(text))
+        if bus_data['ok']:
+            # append bus data to response dict
+            response['data'] = bus_data['data']
         else:
-            self._send_error_message()
+            # if text is correct, but station number is invalid
+            response['ok'] = False
+            response['data'] = _get_error_message('invalid_station')
+    else:
+        # if text is incorrect
+        response['ok'] = False
+        response['data'] = _get_error_message('incorrect_text')
+    return response
 
-    def _get_station_info(self, station_id: int) -> None:
-        response = bus_api.get_bus_info(int(station_id))
-        if response['ok']:
-            redis_key = f'users:{self._user_id}:{int(time())}'
-            keyboard = get_cancel_button(redis_key)
-            msg = self._bot.send_message(
-                self._user_id, response['data'],
-                parse_mode='Markdown',
-                reply_markup=keyboard
-            )
-            init_redis_tracking(self._user_id, station_id, msg.message_id,
-                                redis_key)
-        else:
-            self._send_error_message(station=True)
 
-    def _send_error_message(self, station=None) -> None:
-        # todo error message
-        if station:
-            response = 'Wrong station number!'
-            self._bot.send_message(self._user_id, response)
+def _get_error_message(error_type: str) -> str:
+    """
+    Not coro. Use this func for get different error messages
+    :param error_type: 'incorrect_text' or 'invalid_station'
+    :return: error message for user
+    """
+    error_message = {
+        'incorrect_text': 'Text is incorrect, send station number!',
+        'invalid_station': 'Invalid station number!'
+    }
+    return error_message.get(error_type)

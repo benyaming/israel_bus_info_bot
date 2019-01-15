@@ -3,20 +3,20 @@ from time import time
 from celery import Celery
 from redis import Redis
 
-import utils
 import settings
 
 
 app = Celery(
     'tasks',
-    broker=f'amqp://{settings.rmq_user}:{settings.rmq_pass}@'
-           f'{settings.rmq_host}:{settings.rmq_port}'
+    broker=f'amqp://{settings.RMQ_USER}:{settings.RMQ_PASS}@'
+           f'{settings.RMQ_HOST}:{settings.RMQ_PORT}'
 )
 
 
 @app.task
 def check_redis():
-    r = Redis(host=settings.r_host, port=settings.r_port)
+    print('UPDATING REDIS...')
+    r = Redis(host=settings.R_HOST, port=settings.R_PORT)
     keys = r.keys()
     for key in keys:
         expire = int(r.hget(key, 'expire').decode())
@@ -38,12 +38,14 @@ def check_redis():
 
 @app.task(name='tasks.update_message')
 def update_message(data: dict):
+    print('UPDATING MESSAGE...')
     utils.update_message(data)
     utils.update_last_updated_ts(data['redis_key'])
 
 
 @app.task
 def stop_tracking(data: dict):
+    print('STOPPING MESSAGE TRACKING...')
     utils.update_message(data, last_message=True)
     utils.delete_key_from_redis(data['redis_key'])
 
@@ -51,6 +53,6 @@ def stop_tracking(data: dict):
 app.conf.beat_schedule = {
     'check-redis': {
         'task': 'tasks.check_redis',
-        'schedule': 4.0
+        'schedule': 2.0
     }
 }

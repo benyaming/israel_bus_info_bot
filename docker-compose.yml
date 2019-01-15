@@ -1,0 +1,34 @@
+version: '3'
+
+services:
+  bot:
+    depends_on:
+      - rabbitmq
+      - celery-worker
+      - redis
+    image: benyomin/bib_bot
+    ports:
+      - "8000:8443"
+    env_file: .env
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "8100:15672"
+    env_file: .env
+
+  redis:
+    image: redis
+
+  celery-worker:
+    depends_on:
+      - rabbitmq
+      - redis
+    image: benyomin/bib_celery-worker
+    env_file: .env
+
+  celery-beat:
+    depends_on:
+      - rabbitmq
+    image: benyomin/bib_celery-beat
+    env_file: .env

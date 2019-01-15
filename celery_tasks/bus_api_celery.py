@@ -1,23 +1,25 @@
-import aiohttp
+from typing import Union
+
+import requests
 
 
 URL = 'http://mabat.mot.gov.il/AdalyaService.svc/StationLinesByIdGet'
 
 
-async def get_lines(station_id: int) -> dict:
+def get_lines(station_id: int) -> Union[str, bool]:
     json_data = {
         "stationId": station_id,
         "isSIRI": True,
         "lang": "1037"
     }
 
-    async with aiohttp.request('POST', URL, json=json_data) as r:
-        res = await r.json()
+    with requests.post(URL, json=json_data) as r:
+        res = r.json()
         try:
             lines = res['Payload']['Lines']
             station_name = res['Payload']['StationInfo']['StationName']
         except TypeError:
-            return {'ok': False}
+            return False
 
         buses = []
         for line in lines:
@@ -39,7 +41,6 @@ async def get_lines(station_id: int) -> dict:
             else:
                 bus_list.append(f'🚌 `{bus_number:<5}` 🕓 `{time:<7}` '
                                 f'🏙️ \u200E{target}\u200E')
-        response = '\n'.join(bus_list)
+        result = '\n'.join(bus_list)
 
-        result = {'ok': True, 'data': response}
         return result

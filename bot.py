@@ -1,49 +1,50 @@
-# -*- coding: utf-8 -*-
-from time import sleep
+import asyncio
+import logging
 
-import telebot
-from flask import Flask, request
+from aiogram import Bot, types
+from aiogram.dispatcher import Dispatcher
+from aiogram.utils.executor import start_webhook
+from aiogram.utils.executor import start_polling
+from aiogram.utils import exceptions
 
-import settings
-import text_handler
-from utils import set_expired
-
-
-bot = telebot.TeleBot(settings.TOKEN)
-
-app = Flask(__name__)
+from text_handler import handle_text
+from utils import init_redis_track, get_cancel_button
+from settings import TOKEN, IS_SERVER, WEBAPP_PORT, WEBAPP_HOST
 
 
-@app.route('/', methods=['POST'])
-def webhook():
-    json_string = request.get_data().decode('utf-8')
-    update = telebot.types.Update.de_json(json_string)
-    bot.process_new_updates([update])
-    return 'ok'
+logging.basicConfig(level=logging.INFO)
+
+loop = asyncio.get_event_loop()
+bot = Bot(token=TOKEN, loop=loop)
+dp = Dispatcher(bot)
 
 
-@bot.message_handler(commands=['start'])
-def handle_start(message):
-    bot.send_message(
-        message.from_user.id,
-        'Welcome! Input station ID'
-    )
-
-
-@bot.message_handler(func=lambda message: True, content_types=['text'])
-def handle_text_message(message: telebot.types.Message):
-    bot.send_chat_action(message.from_user.id, 'typing')
-    text_handler.TextHandler(message).verify_station_id()
-
-
-@bot.callback_query_handler(func=lambda call: True)
-def handle_call(call: telebot.types.CallbackQuery):
-    bot.answer_callback_query(call.id)
-    set_expired(call.data)
+@dp.message_handler(content_types=types.ContentTypes.TEXT)
+async def qwe(message: types.message):
+    response = await handle_text(message.text)
+    if response['ok']:
+        keyboard = get_cancel_button()
+        msg = await bot.send_message(
+            message.chat.id, response['data'],
+            parse_mode='Markdown',
+            reply_markup=keyboard)
+        await init_redis_track(
+            user_id=message.chat.id,
+            message_id=msg.message_id,
+            station_id=message.text,
+            loop=dp.loop)
+    else:
+        await bot.send_message(message.chat.id, response['data'])
 
 
 if __name__ == '__main__':
-    if not settings.IS_SERVER:
-        bot.remove_webhook()
-        sleep(1)
-        bot.polling(True, timeout=50)
+    if IS_SERVER:
+        start_webhook(
+            dispatcher=dp,
+            webhook_path=None,
+            loop=loop,
+            host=WEBAPP_HOST,
+            port=WEBAPP_PORT
+        )
+    else:
+        start_polling(dp)
