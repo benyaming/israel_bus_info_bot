@@ -1,7 +1,7 @@
 from os import environ
 
 
-TOKEN = '709546621:AAEIZIVW9EOXCno21PPe8AZnHxNc5KX5LDU'
+TOKEN = environ.get('TOKEN')
 
 WEBAPP_HOST = environ.get('WEBAPP_HOST')
 WEBAPP_PORT = environ.get('WEBAPP_PORT')
