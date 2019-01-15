@@ -2,9 +2,9 @@ from time import time
 
 from requests import get
 from redis import Redis
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from bus_api_celery import get_lines
-from utils import get_cancel_button
 from settings import TOKEN, R_HOST, R_PORT
 
 
@@ -41,3 +41,13 @@ def set_expired(key: str):
 def delete_key_from_redis(key: str):
     r = Redis(R_HOST, R_PORT)
     r.delete(key)
+
+
+def get_cancel_button() -> InlineKeyboardMarkup:
+    """
+    Return inline keyboard with 'Stop tracking' button
+    :return:
+    """
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(InlineKeyboardButton('Stop updating', callback_data='::'))
+    return keyboard
