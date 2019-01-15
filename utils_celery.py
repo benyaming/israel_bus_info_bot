@@ -2,7 +2,6 @@ from time import time
 
 from requests import get
 from redis import Redis
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from bus_api_celery import get_lines
 from settings import TOKEN, R_HOST, R_PORT
@@ -18,10 +17,13 @@ def update_message(data: dict, last_message=False):
         'parse_mode': 'Markdown',
         'text': response
     }
-    keyboard = get_cancel_button() if not last_message \
+
+    keyboard = {
+        'inline_keyboard': [[{'text': 'Stop updating', 'callback_data': '::'}]]
+    } if not last_message \
         else None
     if keyboard:
-        params['reply_markup'] = keyboard.to_python()
+        params['reply_markup'] = keyboard
     print('SENDING REQUEST TO TELEGRAM API...')
     url = f'https://api.telegram.org/bot{TOKEN}/editmessagetext'
     r = get(url, params)
@@ -41,13 +43,3 @@ def set_expired(key: str):
 def delete_key_from_redis(key: str):
     r = Redis(R_HOST, R_PORT)
     r.delete(key)
-
-
-def get_cancel_button() -> InlineKeyboardMarkup:
-    """
-    Return inline keyboard with 'Stop tracking' button
-    :return:
-    """
-    keyboard = InlineKeyboardMarkup()
-    keyboard.add(InlineKeyboardButton('Stop updating', callback_data='::'))
-    return keyboard
