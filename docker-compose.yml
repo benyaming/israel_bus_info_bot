@@ -42,6 +42,6 @@ services:
     image: benyomin/bib_celery
     env_file: .env
     working_dir: /home/code
-      command: >
-        bash -c "git clone https://github.com/benyomin94/israel_bus_info_bot.git /home/code &&
-                 celery -A tasks worker -l warning --concurrency=2"
+    command: >
+      bash -c "git clone https://github.com/benyomin94/israel_bus_info_bot.git /home/code &&
+               celery -A tasks worker -l warning --concurrency=2"
