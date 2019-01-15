@@ -1,0 +1,3 @@
+FROM benyomin/bib_bot:latest
+
+RUN pip install celery flower redis

@@ -1,8 +1,0 @@
-FROM python:latest
-
-VOLUME ["/disk"]
-RUN apt update && apt install nano htop
-COPY code /home/code
-RUN pip install -r /home/code/requirements.txt
-
-ENTRYPOINT cd /home/code && python3.7 bot.py
