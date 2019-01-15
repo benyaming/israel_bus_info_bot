@@ -5,7 +5,6 @@ from aiogram import Bot, types
 from aiogram.dispatcher import Dispatcher
 from aiogram.utils.executor import start_webhook
 from aiogram.utils.executor import start_polling
-from aiogram.utils import exceptions
 
 from text_handler import handle_text
 from utils import init_redis_track, get_cancel_button

@@ -8,7 +8,7 @@ from utils import get_cancel_button
 from settings import TOKEN, R_HOST, R_PORT
 
 
-def _update_message(data: dict, last_message=False):
+def update_message(data: dict, last_message=False):
     bus_data = get_lines(data['station'])
     response = bus_data if not last_message else \
         f'{bus_data}\n\n*Message not updating!*'

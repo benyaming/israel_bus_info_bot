@@ -1,6 +1,5 @@
-pytelegrambotapi
+aiogram
+aioredis
 requests
-flask
-gunicorn
 celery
 redis

@@ -2,6 +2,8 @@ from time import time
 
 from celery import Celery
 from redis import Redis
+from .utils_celery import update_message, update_last_updated_ts, \
+    delete_key_from_redis
 
 import settings
 
@@ -29,7 +31,7 @@ def check_redis():
         }
         if int(time()) < expire:
             if int(time()) - updated_ts > int(settings.PERIOD):
-                utils.update_last_updated_ts(key)
+                update_last_updated_ts(key)
                 update_message.delay(data)
         else:
             stop_tracking.delay(data)
@@ -39,15 +41,15 @@ def check_redis():
 @app.task(name='tasks.update_message')
 def update_message(data: dict):
     print('UPDATING MESSAGE...')
-    utils.update_message(data)
-    utils.update_last_updated_ts(data['redis_key'])
+    update_message(data)
+    update_last_updated_ts(data['redis_key'])
 
 
 @app.task
 def stop_tracking(data: dict):
     print('STOPPING MESSAGE TRACKING...')
-    utils.update_message(data, last_message=True)
-    utils.delete_key_from_redis(data['redis_key'])
+    update_message(data, last_message=True)
+    delete_key_from_redis(data['redis_key'])
 
 
 app.conf.beat_schedule = {
