@@ -6,7 +6,9 @@ services:
       - rabbitmq
       - celery-worker
       - redis
-    image: benyomin/bib_bot
+    build:
+      context: ./docker
+      dockerfile: Dockerfile_bot
     ports:
       - "8000:8443"
     env_file: .env
@@ -24,11 +26,15 @@ services:
     depends_on:
       - rabbitmq
       - redis
-    image: benyomin/bib_celery-worker
+    build:
+      context: ./docker
+      dockerfile: Dockerfile_celery_worker
     env_file: .env
 
   celery-beat:
     depends_on:
       - rabbitmq
-    image: benyomin/bib_celery-beat
+    build:
+      context: ./docker
+      dockerfile: celery_beat
     env_file: .env
