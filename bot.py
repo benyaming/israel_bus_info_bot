@@ -7,7 +7,7 @@ from aiogram.utils.executor import start_webhook
 from aiogram.utils.executor import start_polling
 
 from text_handler import handle_text
-from utils import init_redis_track, get_cancel_button
+from utils import init_redis_track, stop_redis_track, get_cancel_button
 from settings import TOKEN, IS_SERVER, WEBAPP_PORT, WEBAPP_HOST, WEBHOOK_PATH
 
 
@@ -34,6 +34,12 @@ async def qwe(message: types.message):
             loop=dp.loop)
     else:
         await bot.send_message(message.chat.id, response['data'])
+
+
+@dp.callback_query_handler(lambda callback_query: True)
+async def habdle_stop_query(call: types.CallbackQuery):
+    await call.answer('Will stop soon')  # TODO normal text
+    await stop_redis_track(call.from_user.id, loop=dp.loop)
 
 
 if __name__ == '__main__':

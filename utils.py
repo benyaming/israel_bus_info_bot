@@ -31,3 +31,10 @@ async def init_redis_track(user_id: int, message_id: int, station_id: int,
     await r.hmset_dict(user_id, data)
     r.close()
     await r.wait_closed()
+
+
+async def stop_redis_track(user_id: int, loop) -> None:
+    r = await aioredis.create_redis(f'redis://{R_HOST}:{R_PORT}', loop=loop)
+    await r.hset(key=user_id, field='expire', value=int(time()))
+    r.close()
+    await r.wait_closed()

@@ -42,7 +42,6 @@ def check_redis():
 def update_message(data: dict):
     print('UPDATING MESSAGE...')
     update(data)
-    update_last_updated_ts(data['redis_key'])
 
 
 @app.task
