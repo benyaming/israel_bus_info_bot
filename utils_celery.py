@@ -32,7 +32,7 @@ def update(data: dict, last_message=False):
 
 def update_last_updated_ts(key: str):
     r = Redis(R_HOST, R_PORT)
-    r.hset(key, 'last_send', int(time()))
+    r.hset(key, 'updated', int(time()))
 
 
 def set_expired(key: str):

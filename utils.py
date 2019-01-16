@@ -26,7 +26,6 @@ async def init_redis_track(user_id: int, message_id: int, station_id: int,
         'expire': int(time()) + int(TTL)
     }
     # TODO check if user already in redis
-    # TODO init redis params
     r = await aioredis.create_redis(f'redis://{R_HOST}:{R_PORT}', loop=loop)
 
     await r.hmset_dict(user_id, data)
