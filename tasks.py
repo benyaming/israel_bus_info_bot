@@ -55,6 +55,6 @@ def stop_tracking(data: dict):
 app.conf.beat_schedule = {
     'check-redis': {
         'task': 'tasks.check_redis',
-        'schedule': 2.0
+        'schedule': 5.0
     }
 }
