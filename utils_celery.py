@@ -1,3 +1,4 @@
+from json import dumps
 from time import time
 
 from requests import get
@@ -17,11 +18,12 @@ def update(data: dict, last_message=False):
         'parse_mode': 'Markdown',
         'text': response
     }
-
-    keyboard = {
-        'inline_keyboard': [[{'text': 'Stop updating', 'callback_data': '::'}]]
-    } if not last_message \
-        else None
+    keyboard = dumps(
+        {
+            "inline_keyboard": [
+                [{"text": "Stop updating", "callback_data": "::"}]]
+        }
+    ) if not last_message else None
     if keyboard:
         params['reply_markup'] = keyboard
     print('SENDING REQUEST TO TELEGRAM API...')
