@@ -17,7 +17,7 @@ app = Celery(
 
 @app.task
 def check_redis():
-    print('UPDATING REDIS...')
+    print('CHECKING REDIS...')
     r = Redis(host=settings.R_HOST, port=settings.R_PORT)
     keys = r.keys()
     for key in keys:
