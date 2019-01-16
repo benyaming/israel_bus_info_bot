@@ -2,7 +2,7 @@ from time import time
 
 from celery import Celery
 from redis import Redis
-from utils_celery import update_message, update_last_updated_ts, \
+from utils_celery import update, update_last_updated_ts, \
     delete_key_from_redis
 
 import settings
@@ -41,14 +41,14 @@ def check_redis():
 @app.task(name='tasks.update_message')
 def update_message(data: dict):
     print('UPDATING MESSAGE...')
-    update_message(data)
+    update(data)
     update_last_updated_ts(data['redis_key'])
 
 
 @app.task
 def stop_tracking(data: dict):
     print('STOPPING MESSAGE TRACKING...')
-    update_message(data, last_message=True)
+    update(data, last_message=True)
     delete_key_from_redis(data['redis_key'])
 
 

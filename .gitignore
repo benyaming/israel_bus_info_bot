@@ -8,3 +8,7 @@ __pycache__/
 test\.py
 
 testaio\.py
+
+celerybeat-schedule\.dat
+
+*.dir
