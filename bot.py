@@ -8,7 +8,7 @@ from aiogram.utils.executor import start_polling
 
 from text_handler import handle_text
 from utils import init_redis_track, get_cancel_button
-from settings import TOKEN, IS_SERVER, WEBAPP_PORT, WEBAPP_HOST
+from settings import TOKEN, IS_SERVER, WEBAPP_PORT, WEBAPP_HOST, WEBHOOK_PATH
 
 
 logging.basicConfig(level=logging.INFO)
@@ -40,7 +40,7 @@ if __name__ == '__main__':
     if IS_SERVER:
         start_webhook(
             dispatcher=dp,
-            webhook_path=None,
+            webhook_path=WEBHOOK_PATH,
             loop=loop,
             host=WEBAPP_HOST,
             port=WEBAPP_PORT

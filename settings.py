@@ -5,6 +5,7 @@ TOKEN = environ.get('TOKEN')
 
 WEBAPP_HOST = environ.get('WEBAPP_HOST')
 WEBAPP_PORT = environ.get('WEBAPP_PORT')
+WEBHOOK_PATH=environ.get('WEBHOOK_PATH')
 
 IS_SERVER = environ.get('IS_SERVER')
 
