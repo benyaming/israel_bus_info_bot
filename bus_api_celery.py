@@ -1,19 +1,26 @@
 from typing import Union
 
-import requests
+from requests import post
 
 
 URL = 'http://mabat.mot.gov.il/AdalyaService.svc/StationLinesByIdGet'
 
 
 def get_lines(station_id: int) -> Union[str, bool]:
+    """
+    This function is sync version of bus_api.get_lines. It needs because
+    celery cant working with python's asyncio. Except request to api,
+    function's body is absolutely same as async version
+    :param station_id:
+    :return:
+    """
     json_data = {
         "stationId": station_id,
         "isSIRI": True,
         "lang": "1037"
     }
 
-    with requests.post(URL, json=json_data) as r:
+    with post(URL, json=json_data) as r:
         res = r.json()
         try:
             lines = res['Payload']['Lines']

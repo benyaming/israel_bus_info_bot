@@ -1,25 +1,39 @@
+from typing import Union
+
 import aiohttp
 
 
 URL = 'http://mabat.mot.gov.il/AdalyaService.svc/StationLinesByIdGet'
 
 
-async def get_lines(station_id: int) -> dict:
+async def get_lines(station_id: int) -> Union[str, bool]:
+    """
+    Coro. This coro func makes request to mabat bus api, and forms shiny
+    message with lines that arrives soon.
+    :param station_id:
+    :return: string message if success, with markdown for telegram
+    """
+    # data for request to api
     json_data = {
         "stationId": station_id,
         "isSIRI": True,
         "lang": "1037"
     }
 
+    # making request
     async with aiohttp.request('POST', URL, json=json_data) as r:
         res = await r.json()
         try:
+            # if station id valid
             lines = res['Payload']['Lines']
             station_name = res['Payload']['StationInfo']['StationName']
         except TypeError:
-            return {'ok': False}
+            # if station id invalid
+            return False
 
-        buses = []
+        buses = []  # list that colects all lines
+
+        # extract usefull data from response and accumulating in lines list
         for line in lines:
             bus = dict()
             bus['bus_number'] = line['LineSign']
@@ -27,7 +41,9 @@ async def get_lines(station_id: int) -> dict:
             bus['target_city'] = line['TargetCityName']
             buses.append(bus)
 
-        bus_list = [f'*{station_name}*\n']
+        bus_list = [f'*{station_name}*\n']  # list with formatted lines
+
+        # formatting each line in lines list and collect them to formatted list
         for i in buses:
             bus_number = i["bus_number"]
             target = i['target_city']
@@ -39,7 +55,7 @@ async def get_lines(station_id: int) -> dict:
             else:
                 bus_list.append(f'🚌 `{bus_number:<5}` 🕓 `{time:<7}` '
                                 f'🏙️ \u200E{target}\u200E')
-        response = '\n'.join(bus_list)
 
-        result = {'ok': True, 'data': response}
-        return result
+        # making string from formatted list
+        response = '\n'.join(bus_list)
+        return response

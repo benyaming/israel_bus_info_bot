@@ -18,6 +18,7 @@ bot = Bot(token=TOKEN, loop=loop)
 dp = Dispatcher(bot)
 
 
+# Handler for all text messages
 @dp.message_handler(content_types=types.ContentTypes.TEXT)
 async def qwe(message: types.message):
     response = await handle_text(message.text)
@@ -36,6 +37,7 @@ async def qwe(message: types.message):
         await bot.send_message(message.chat.id, response['data'])
 
 
+# Handler for "Stop tracking" Callback button
 @dp.callback_query_handler(lambda callback_query: True)
 async def habdle_stop_query(call: types.CallbackQuery):
     await call.answer('Will stop soon')  # TODO normal text

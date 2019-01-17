@@ -11,9 +11,9 @@ async def handle_text(text: str) -> dict:
     # check if text correct
     if text.isdigit():
         bus_data = await get_lines(int(text))
-        if bus_data['ok']:
+        if bus_data:
             # append bus data to response dict
-            response['data'] = bus_data['data']
+            response['data'] = bus_data
         else:
             # if text is correct, but station number is invalid
             response['ok'] = False
