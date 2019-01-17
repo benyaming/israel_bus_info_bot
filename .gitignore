@@ -12,3 +12,5 @@ testaio\.py
 celerybeat-schedule\.dat
 
 *.dir
+
+celerybeat\.pid

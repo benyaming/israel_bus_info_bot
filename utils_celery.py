@@ -13,7 +13,7 @@ def update(data: dict, last_message=False):
     response = bus_data if not last_message else \
         f'{bus_data}\n\n*Message not updating!*'
     params = {
-        'chat_id': data['user_id'],
+        'chat_id': data['id'],
         'message_id': data['message_id'],
         'parse_mode': 'Markdown',
         'text': response
@@ -40,6 +40,7 @@ def update_last_updated_ts(key: str):
 def set_expired(key: str):
     r = Redis(R_HOST, R_PORT)
     r.hset(key, 'expire', int(time()))
+    print(r.hgetall(key))
 
 
 def delete_key_from_redis(key: str):
