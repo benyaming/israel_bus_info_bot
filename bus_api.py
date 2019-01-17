@@ -1,6 +1,6 @@
 from typing import Union
 
-import aiohttp
+from aiohttp import request
 
 
 URL = 'http://mabat.mot.gov.il/AdalyaService.svc/StationLinesByIdGet'
@@ -21,7 +21,7 @@ async def get_lines(station_id: int) -> Union[str, bool]:
     }
 
     # making request
-    async with aiohttp.request('POST', URL, json=json_data) as r:
+    async with request('POST', URL, json=json_data) as r:
         res = await r.json()
         try:
             # if station id valid

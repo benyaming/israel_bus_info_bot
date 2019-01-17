@@ -18,6 +18,26 @@ bot = Bot(token=TOKEN, loop=loop)
 dp = Dispatcher(bot)
 
 
+# /start command handler
+@dp.message_handler(commands=['start'])
+async def handle_start(message: types.message):
+    response = 'Hi! Send me a station number!'
+    await bot.send_message(message.chat.id, response)
+
+
+# /help command handler
+@dp.message_handler(commands=['help'])
+async def handle_help(message: types.message):
+    response = 'Send to bot station\'s number, and bot will send you ' \
+               'arrival times of nearest buses. The message with times will ' \
+               'updating each 15 seconds for 15 minutes or until you send ' \
+               'another number or will press "Stop tracking" button.\n\n' \
+               'Author: @benyomin\n' \
+               'Code: https://github.com/benyomin94/israel_bus_info_bot'
+    await bot.send_message(message.chat.id, response,
+                           disable_web_page_preview=True)
+
+
 # Handler for all text messages
 @dp.message_handler(content_types=types.ContentTypes.TEXT)
 async def qwe(message: types.message):
