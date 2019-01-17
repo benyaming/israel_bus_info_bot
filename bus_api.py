@@ -57,5 +57,5 @@ async def get_lines(station_id: int) -> Union[str, bool]:
                                 f'🏙️ \u200E{target}\u200E')
 
         # making string from formatted list
-        response = '\n'.join(bus_list)
+        response = '\n'.join(bus_list) + '\n\n_Information is updating..._'
         return response

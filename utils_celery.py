@@ -19,8 +19,8 @@ def update(data: dict, last_message: Optional[bool] = None) -> None:
     """
     bus_data = get_lines(data['station'])
 
-    response = bus_data if not last_message else \
-        f'{bus_data}\n\n*Message not updating!*'
+    response = f'{bus_data}\n\n_Information is updating..._' if not \
+        last_message else f'{bus_data}\n\n*Message not updating!*'
 
     params = {
         'chat_id': data['id'],
