@@ -7,7 +7,8 @@ from aiogram.utils.executor import start_webhook
 from aiogram.utils.executor import start_polling
 
 from text_handler import handle_text
-from utils import init_redis_track, stop_redis_track, get_cancel_button
+from utils import init_redis_track, stop_redis_track, get_cancel_button, \
+    check_user
 from settings import TOKEN, IS_SERVER, WEBAPP_PORT, WEBAPP_HOST, WEBHOOK_PATH
 
 
@@ -55,6 +56,7 @@ async def qwe(message: types.message):
             loop=dp.loop)
     else:
         await bot.send_message(message.chat.id, response['data'])
+    await check_user(message.from_user)
 
 
 # Handler for "Stop tracking" Callback button

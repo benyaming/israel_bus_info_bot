@@ -9,6 +9,8 @@ WEBHOOK_PATH=environ.get('WEBHOOK_PATH')
 
 IS_SERVER = environ.get('IS_SERVER')
 
+DB_PARAMS = environ.get('DB_PARAMS')
+
 R_HOST = environ.get('R_HOST')
 R_PORT = environ.get('R_PORT')
 

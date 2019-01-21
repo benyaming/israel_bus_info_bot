@@ -1,9 +1,10 @@
 from time import time
 
+from aiopg import create_pool
 from aioredis import create_redis
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, User
 
-from settings import TTL, R_HOST, R_PORT
+from settings import TTL, R_HOST, R_PORT, DB_PARAMS
 from tasks import send_last_update
 
 
@@ -66,3 +67,18 @@ async def stop_redis_track(user_id: int, loop) -> None:
     await r.hset(key=user_id, field='expire', value=int(time()))
     r.close()
     await r.wait_closed()
+
+
+async def check_user(user: User):
+    async with create_pool(DB_PARAMS) as pool:
+        async with pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                query = f'INSERT INTO users \
+                          VALUES \
+                          ( \
+                            {user.id}, {user.first_name}, \
+                            {user.last_name}, {user.username} \
+                          ) \
+                          ON CONFLICT DO NOTHING'
+                await cur.execute(query)
+
