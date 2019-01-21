@@ -76,8 +76,8 @@ async def check_user(user: User):
                 query = f'INSERT INTO users \
                           VALUES \
                           ( \
-                            {user.id}, {user.first_name}, \
-                            {user.last_name}, {user.username} \
+                            {user.id}, \'{user.first_name}\', \
+                            \'{user.last_name}\', \'{user.username}\' \
                           ) \
                           ON CONFLICT DO NOTHING'
                 await cur.execute(query)
