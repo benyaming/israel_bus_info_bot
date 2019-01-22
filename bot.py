@@ -5,6 +5,7 @@ from aiogram import Bot, types
 from aiogram.dispatcher import Dispatcher
 from aiogram.utils.executor import start_webhook
 from aiogram.utils.executor import start_polling
+from aiogram.utils.exceptions import BotBlocked
 
 from text_handler import handle_text
 from utils import init_redis_track, stop_redis_track, get_cancel_button, \
@@ -45,15 +46,19 @@ async def qwe(message: types.message):
     response = await handle_text(message.text)
     if response['ok']:
         keyboard = get_cancel_button()
-        msg = await bot.send_message(
-            message.chat.id, response['data'],
-            parse_mode='Markdown',
-            reply_markup=keyboard)
-        await init_redis_track(
-            user_id=message.chat.id,
-            message_id=msg.message_id,
-            station_id=message.text,
-            loop=dp.loop)
+        try:
+            msg = await bot.send_message(
+                message.chat.id, response['data'],
+                parse_mode='Markdown',
+                reply_markup=keyboard)
+        except BotBlocked:
+            logging.warning(f'USER {message.chat.id} BLOCKED THE BOT!')
+        else:
+            await init_redis_track(
+                user_id=message.chat.id,
+                message_id=msg.message_id,
+                station_id=message.text,
+                loop=dp.loop)
     else:
         await bot.send_message(message.chat.id, response['data'])
     await check_user(message.from_user)
