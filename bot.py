@@ -61,7 +61,7 @@ async def qwe(message: types.message):
 
 # Handler for "Stop tracking" Callback button
 @dp.callback_query_handler(lambda callback_query: True)
-async def habdle_stop_query(call: types.CallbackQuery):
+async def handle_stop_query(call: types.CallbackQuery):
     await call.answer('Will stop soon')  # TODO normal text
     await stop_redis_track(call.from_user.id, loop=dp.loop)
 

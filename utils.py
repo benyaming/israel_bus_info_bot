@@ -64,7 +64,9 @@ async def stop_redis_track(user_id: int, loop) -> None:
     :return:
     """
     r = await create_redis(f'redis://{R_HOST}:{R_PORT}', loop=loop)
-    await r.hset(key=user_id, field='expire', value=int(time()))
+    user_in_redis = await r.exists(user_id)
+    if user_in_redis:
+        await r.hset(key=user_id, field='expire', value=int(time()))
     r.close()
     await r.wait_closed()
 
