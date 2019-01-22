@@ -46,19 +46,15 @@ async def qwe(message: types.message):
     response = await handle_text(message.text)
     if response['ok']:
         keyboard = get_cancel_button()
-        try:
-            msg = await bot.send_message(
-                message.chat.id, response['data'],
-                parse_mode='Markdown',
-                reply_markup=keyboard)
-        except BotBlocked:
-            logging.warning(f'USER {message.chat.id} BLOCKED THE BOT!')
-        else:
-            await init_redis_track(
-                user_id=message.chat.id,
-                message_id=msg.message_id,
-                station_id=message.text,
-                loop=dp.loop)
+        msg = await bot.send_message(
+            message.chat.id, response['data'],
+            parse_mode='Markdown',
+            reply_markup=keyboard)
+        await init_redis_track(
+            user_id=message.chat.id,
+            message_id=msg.message_id,
+            station_id=message.text,
+            loop=dp.loop)
     else:
         await bot.send_message(message.chat.id, response['data'])
     await check_user(message.from_user)
@@ -67,6 +63,8 @@ async def qwe(message: types.message):
 # Handler for "Stop tracking" Callback button
 @dp.callback_query_handler(lambda callback_query: True)
 async def handle_stop_query(call: types.CallbackQuery):
+    await bot.edit_message_reply_markup(call.from_user.id,
+                                        call.message.message_id)
     await call.answer('Will stop soon')  # TODO normal text
     await stop_redis_track(call.from_user.id, loop=dp.loop)
 
