@@ -42,7 +42,7 @@ async def handle_help(message: types.message):
 
 # Handler for all text messages
 @dp.message_handler(content_types=types.ContentTypes.TEXT)
-async def qwe(message: types.message):
+async def text_handler(message: types.message):
     response = await handle_text(message.text)
     if response['ok']:
         keyboard = get_cancel_button()
@@ -76,7 +76,8 @@ if __name__ == '__main__':
             webhook_path=WEBHOOK_PATH,
             loop=loop,
             host=WEBAPP_HOST,
-            port=WEBAPP_PORT
+            port=WEBAPP_PORT,
+            skip_updates=True
         )
     else:
         start_polling(dp)
