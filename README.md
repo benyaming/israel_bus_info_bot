@@ -1,6 +1,6 @@
 # Bus info bot
 
-Telegram bot for Israel that provides real time of bus arrivenings
+Telegram bot for Israel that provides real time of bus arrivals.
 
 ## Usage 
 Just open the bot at Telegram, and send id of your station.
