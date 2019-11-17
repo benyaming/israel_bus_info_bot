@@ -17,5 +17,5 @@ DB_NAME = environ.get('DB_NAME')
 DB_PARAMS = f'dbname={DB_NAME} user={DB_USER} password={DB_PASS} ' \
             f'host={DB_HOST} port={DB_PORT}'
 
-PERIOD = environ.get('PERIOD')  # how often message updates (seconds)
+PERIOD = int(environ.get('PERIOD'))  # how often message updates (seconds)
 TTL = 900  # how long message updates (seconds)
