@@ -1,6 +1,0 @@
-aiogram
-aioredis
-aiopg
-requests
-celery
-redis

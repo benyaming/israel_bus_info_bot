@@ -1,7 +1,9 @@
+from typing import Union
+
 from bus_api import get_lines
 
 
-async def handle_text(text: str) -> dict:
+async def handle_text(text: Union[str, int]) -> dict:
     """
     Coro. Entrypoint for all text messages. Filters incorrect text
     :param text: text from message
@@ -14,6 +16,7 @@ async def handle_text(text: str) -> dict:
         if bus_data:
             # append bus data to response dict
             response['data'] = bus_data
+            response['station_id'] = text
         else:
             # if text is correct, but station number is invalid
             response['ok'] = False
