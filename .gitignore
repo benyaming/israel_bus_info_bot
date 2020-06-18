@@ -14,3 +14,4 @@ celerybeat-schedule\.dat
 *.dir
 
 celerybeat\.pid
+.env

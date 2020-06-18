@@ -1,38 +1,27 @@
 import asyncio
-import logging
 from dataclasses import dataclass
 from typing import Optional
 
-from aiogram import Bot, types
+import aiopg
+from aiogram.types import ContentTypes, Message, CallbackQuery
 from aiogram.dispatcher import Dispatcher
-from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.utils.executor import start_webhook, start_polling
 from aiogram.utils.exceptions import MessageNotModified
 
-from text_handler import handle_text
-from utils import get_cancel_button, check_user
-from bus_api import get_lines
-from settings import TOKEN, IS_SERVER, WEBAPP_PORT, WEBAPP_HOST, WEBHOOK_PATH, PERIOD, TTL
+from bus_bot.text_handler import handle_text
+from bus_bot.helpers import get_cancel_button, check_user, UserData
+from bus_bot.bus_api import get_lines
+from bus_bot.config import IS_SERVER, WEBAPP_PORT, WEBAPP_HOST, WEBHOOK_PATH, PERIOD, TTL, DSN
+from bus_bot.misc import bot, dp, logger
 
 
 ITERATIONS = TTL // PERIOD
 
 
-@dataclass
-class UserData:
-    user_id: int
-    station_id: int
-    message_id: int
-    next_station_id: Optional[int] = False
-    next_message_id: Optional[int] = False
-    stop_updating: bool = False
-
-
-logging.basicConfig(level=logging.INFO)
-
-storage = MemoryStorage()
-bot = Bot(token=TOKEN, parse_mode=types.ParseMode.MARKDOWN)
-dp = Dispatcher(bot, storage=storage)
+async def on_start(dispatcher: Dispatcher):
+    logger.info('STARTING BUS BOT...')
+    db_conn = await aiopg.create_pool(dsn=DSN)
+    dispatcher['db_pool'] = db_conn
 
 
 async def update_message(user_id: int, last: bool = False) -> None:
@@ -98,14 +87,14 @@ async def run_updater(user_id: int) -> None:
 
 # /start command handler
 @dp.message_handler(commands=['start'])
-async def handle_start(message: types.message):
+async def handle_start(message: Message):
     response = 'Hi! Send me a station number!'
     await bot.send_message(message.chat.id, response)
 
 
 # /help command handler
 @dp.message_handler(commands=['help'])
-async def handle_help(message: types.message):
+async def handle_help(message: Message):
     response = 'Send to the bot station\'s number, and bot will send you ' \
                'arrival times of nearest buses. The message with times will ' \
                'updating each 15 seconds for 15 minutes or until you send ' \
@@ -116,8 +105,8 @@ async def handle_help(message: types.message):
 
 
 # Handler for all text messages
-@dp.message_handler(content_types=types.ContentTypes.TEXT)
-async def text_handler(message: types.Message):
+@dp.message_handler(content_types=ContentTypes.TEXT)
+async def text_handler(message: Message):
     response = await handle_text(message.text)
     keyboard = get_cancel_button() if response['ok'] else None
     msg = await bot.send_message(message.chat.id, response['data'], reply_markup=keyboard)
@@ -129,11 +118,12 @@ async def text_handler(message: types.Message):
             msg.message_id,
             response['station_id']
         )
-    await check_user(message.from_user)
+    await check_user()
+
 
 # Handler for "Stop tracking" Callback button
 @dp.callback_query_handler(lambda callback_query: True)
-async def handle_stop_query(call: types.CallbackQuery):
+async def handle_stop_query(call: CallbackQuery):
     await bot.edit_message_reply_markup(call.from_user.id, call.message.message_id)
     await call.answer('Will stop soon')  # TODO normal text
     user_data: UserData = await dp.storage.get_data(user=call.from_user.id)
@@ -148,7 +138,8 @@ if __name__ == '__main__':
             webhook_path=WEBHOOK_PATH,
             host=WEBAPP_HOST,
             port=WEBAPP_PORT,
-            skip_updates=True
+            skip_updates=True,
+            on_startup=on_start
         )
     else:
-        start_polling(dp)
+        start_polling(dp, on_startup=on_start)

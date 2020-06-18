@@ -1,6 +1,6 @@
 from typing import Union
 
-from bus_api import get_lines
+from bus_bot.bus_api import get_lines
 
 
 async def handle_text(text: Union[str, int]) -> dict:
