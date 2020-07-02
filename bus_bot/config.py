@@ -17,4 +17,4 @@ DB_NAME = environ.get('DB_NAME')
 DSN = f'dbname={DB_NAME} user={DB_USER} password={DB_PASS} host={DB_HOST} port={DB_PORT}'
 
 PERIOD = int(environ.get('PERIOD'))  # how often message updates (seconds)
-TTL = int(environ.get('PERIOD', 900))  # how long message updates (seconds)
+TTL = int(environ.get('TTL', 900))  # how long message updates (seconds)

@@ -1,6 +1,7 @@
 from typing import Union
 
 from aiohttp import request
+from aiogram import Bot
 
 
 URL = 'http://mabat.mot.gov.il/AdalyaService.svc/StationLinesByIdGet'
@@ -65,3 +66,23 @@ async def get_lines(station_id: int, last: bool = False) -> Union[str, bool]:
     response = f'{response}\n\n{status}'
 
     return response
+
+
+async def is_station_valid(station: str) -> bool:
+    session = Bot.get_current().session
+
+    json = {
+        "stationId": station,
+        "isSIRI": True,
+        "lang": "1037"
+    }
+    async with session.post(URL, json=json) as resp:
+        resp = await resp.json()
+        try:
+            station_info = resp['Payload']['StationInfo']
+        except (TypeError, KeyError):
+            return False
+        if not station_info:
+            return False
+
+        return True

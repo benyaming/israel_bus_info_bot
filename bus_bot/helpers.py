@@ -17,13 +17,13 @@ class UserData:
     stop_updating: bool = False
 
 
-def get_cancel_button() -> InlineKeyboardMarkup:
+def get_cancel_button(station: str) -> InlineKeyboardMarkup:
     """
     Return inline keyboard with 'Stop tracking' button
     :return:
     """
     keyboard = InlineKeyboardMarkup()
-    keyboard.add(InlineKeyboardButton('Stop updating', callback_data='::'))
+    keyboard.add(InlineKeyboardButton('Stop updating', callback_data=f'{station}'))
     return keyboard
 
 
