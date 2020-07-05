@@ -1,4 +1,0 @@
-FROM python:latest
-
-RUN apt update && apt install nano htop
-RUN mkdir /home/code
