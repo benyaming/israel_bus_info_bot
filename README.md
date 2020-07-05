@@ -15,9 +15,3 @@ The message with lines will updated every 15 seconds untill either:
 - "Stop updating" button will pressed
 - another station id will sent
 
-
-## Project structure
-
-There are two parts of project:
-- The bot: provides basic bot options, such as reply to your messages. Powered by [aiogram](https://github.com/aiogram/aiogram) 
-- Updater: updates messages that have been sent by bot. Powered by [Celery](https://github.com/celery/celery)
