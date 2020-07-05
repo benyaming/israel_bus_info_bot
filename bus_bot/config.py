@@ -7,7 +7,7 @@ WEBAPP_HOST = environ.get('WEBAPP_HOST')
 WEBAPP_PORT = environ.get('WEBAPP_PORT')
 WEBHOOK_PATH = environ.get('WEBHOOK_PATH')
 
-IS_SERVER = environ.get('IS_SERVER')
+DOCKER_MODE = environ.get('DOCKER_MODE')
 
 DB_HOST = environ.get('DB_HOST')
 DB_PORT = environ.get('DB_PORT')
