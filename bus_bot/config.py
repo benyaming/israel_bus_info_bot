@@ -6,6 +6,7 @@ TOKEN = environ.get('TOKEN')
 WEBAPP_HOST = environ.get('WEBAPP_HOST')
 WEBAPP_PORT = environ.get('WEBAPP_PORT')
 WEBHOOK_PATH = environ.get('WEBHOOK_PATH')
+WEBHOOK_URL = environ.get('WEBHOOK_URL')
 
 DOCKER_MODE = environ.get('DOCKER_MODE')
 

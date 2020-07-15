@@ -8,7 +8,16 @@ from aiogram.utils.exceptions import MessageNotModified
 
 from bus_bot.helpers import get_cancel_button, check_user, UserData
 from bus_bot.bus_api import get_lines, is_station_valid
-from bus_bot.config import DOCKER_MODE, WEBAPP_PORT, WEBAPP_HOST, WEBHOOK_PATH, PERIOD, TTL, DSN
+from bus_bot.config import (
+    DOCKER_MODE,
+    WEBAPP_PORT,
+    WEBAPP_HOST,
+    WEBHOOK_PATH,
+    PERIOD,
+    TTL,
+    DSN,
+    WEBHOOK_URL
+)
 from bus_bot.misc import bot, dp, logger
 from bus_bot.sessions import Session, SESSION_STORAGE
 from bus_bot import texts
@@ -19,6 +28,8 @@ ITERATIONS = TTL // PERIOD
 
 async def on_start(dispatcher: Dispatcher):
     logger.info('STARTING BUS BOT...')
+    if DOCKER_MODE:
+        await bot.set_webhook(WEBHOOK_URL)
     db_conn = await aiopg.create_pool(dsn=DSN)
     dispatcher['db_pool'] = db_conn
 
@@ -112,6 +123,7 @@ async def handle_stop_query(call: CallbackQuery):
 
 if __name__ == '__main__':
     if DOCKER_MODE:
+
         start_webhook(
             dispatcher=dp,
             webhook_path=WEBHOOK_PATH,
