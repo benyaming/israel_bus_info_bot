@@ -1,20 +1,5 @@
-from dataclasses import dataclass
-from typing import Optional
-
-from aiopg import create_pool
-from aiopg.pool import Pool
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, User
 from aiogram import Dispatcher
-
-
-@dataclass
-class UserData:
-    user_id: int
-    station_id: int
-    message_id: int
-    next_station_id: Optional[int] = False
-    next_message_id: Optional[int] = False
-    stop_updating: bool = False
 
 
 def get_cancel_button(station: int) -> InlineKeyboardMarkup:

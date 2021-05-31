@@ -13,7 +13,6 @@ class Session:
     next_msg_id: Optional[int] = None
     current_station: int
     next_station: Optional[int] = None
-    # expired = False
     updates_count: int
 
     def __init__(self, user_id: int, station: int):

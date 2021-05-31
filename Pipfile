@@ -8,6 +8,8 @@ verify_ssl = true
 [packages]
 aiogram = "*"
 aiopg = "*"
+aiogram-metrics = "*"
+betterlogging = "*"
 
 [requires]
 python_version = "3.7"

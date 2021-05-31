@@ -8,7 +8,6 @@ URL = 'http://mabat.mot.gov.il/AdalyaService.svc/StationLinesByIdGet'
 
 
 async def get_lines(station_id: int, last: bool = False) -> Union[str, bool]:
-    # todo last massage not working
     """
     Coro. This coro func makes request to mabat bus api, and forms shiny
     message with lines that arrives soon.
@@ -45,7 +44,7 @@ async def get_lines(station_id: int, last: bool = False) -> Union[str, bool]:
         bus['target_city'] = line['TargetCityName']
         buses.append(bus)
 
-    bus_list = [f'*{station_name}*\n']  # list with formatted lines
+    bus_list = [f'<b>{station_name}</b>\n']  # list with formatted lines
 
     # formatting each line in lines list and collect them to formatted list
     for i in buses:
@@ -53,15 +52,15 @@ async def get_lines(station_id: int, last: bool = False) -> Union[str, bool]:
         target = i['target_city']
         time = f'{i["minutes"]} min' if i['minutes'] != 0 else 'now'
         if 'א' in i['bus_number']:
-            bus_str = f'\u200E🚌 `{bus_number:<5}`\u200E 🕓 `{time:<7}` ' \
+            bus_str = f'\u200E🚌 <code>{bus_number:<5}</code>\u200E 🕓 <code>{time:<7}</code> ' \
                 f'🏙️ \u200E{target}\u200E'
             bus_list.append(bus_str)
         else:
-            bus_list.append(f'🚌 `{bus_number:<5}` 🕓 `{time:<7}` '
+            bus_list.append(f'🚌 <code>{bus_number:<5}</code> 🕓 <code>{time:<7}</code> '
                             f'🏙️ \u200E{target}\u200E')
 
     # making string from formatted list
-    status = '_Information is updating..._' if not last else '*Message not updating!*'
+    status = '<i>Information is updating...</i>' if not last else '<b>Message not updating!</b>'
     response = '\n'.join(bus_list)
     response = f'{response}\n\n{status}'
 

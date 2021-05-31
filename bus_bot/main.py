@@ -1,12 +1,13 @@
 import asyncio
 
 import aiopg
+import aiogram_metrics
 from aiogram.types import ContentTypes, Message, CallbackQuery, Update
 from aiogram.dispatcher import Dispatcher
 from aiogram.utils.executor import start_webhook, start_polling
 from aiogram.utils.exceptions import MessageNotModified
 
-from bus_bot.helpers import get_cancel_button, check_user, UserData
+from bus_bot.helpers import get_cancel_button, check_user
 from bus_bot.bus_api import get_lines, is_station_valid
 from bus_bot.config import (
     DOCKER_MODE,
@@ -16,12 +17,13 @@ from bus_bot.config import (
     PERIOD,
     TTL,
     DSN,
-    WEBHOOK_URL
+    WEBHOOK_URL,
+    METRICS_DSN,
+    METRICS_TABLE_NAME
 )
 from bus_bot.misc import bot, dp, logger
 from bus_bot.sessions import Session, SESSION_STORAGE
 from bus_bot import texts
-
 
 ITERATIONS = TTL // PERIOD
 
@@ -30,8 +32,15 @@ async def on_start(dispatcher: Dispatcher):
     logger.info('STARTING BUS BOT...')
     if DOCKER_MODE:
         await bot.set_webhook(WEBHOOK_URL)
-    db_conn = await aiopg.create_pool(dsn=DSN)
-    dispatcher['db_pool'] = db_conn
+    # db_conn = await aiopg.create_pool(dsn=DSN)
+    # dispatcher['db_pool'] = db_conn
+
+    await aiogram_metrics.register(METRICS_DSN, METRICS_TABLE_NAME)
+
+
+async def on_shutdown(dispatcher: Dispatcher):
+    logger.info('SHUTTING DOWN...')
+    await aiogram_metrics.close()
 
 
 @dp.errors_handler(exception=MessageNotModified)
@@ -41,13 +50,14 @@ async def not_modified(update: Update, e: MessageNotModified):
 
 
 @dp.message_handler(commands=['start'])
+@aiogram_metrics.track('/start command')
 async def handle_start(message: Message):
     await bot.send_message(message.chat.id, texts.start_command)
     await check_user()
 
 
-# /help command handler
 @dp.message_handler(commands=['help'])
+@aiogram_metrics.track('/help command')
 async def handle_help(message: Message):
     await bot.send_message(message.chat.id, texts.help_command)
 
@@ -83,6 +93,7 @@ async def updater(session: Session):
 async def station_handler(msg: Message):
     station_valid = await is_station_valid(msg.text)
     if not station_valid:
+        aiogram_metrics.manual_track('Invalid station')
         return await msg.reply(texts.invalid_station)
 
     if msg.from_user.id in SESSION_STORAGE:
@@ -95,6 +106,7 @@ async def station_handler(msg: Message):
     content = await get_lines(station_id=msg.text)
     kb = get_cancel_button(msg.text)
     sent = await msg.reply(content, reply_markup=kb)
+    aiogram_metrics.manual_track('Init station schedule')
 
     if not is_next_station:
         session.msg_id = sent.message_id
@@ -105,11 +117,13 @@ async def station_handler(msg: Message):
 
 
 @dp.message_handler()
+@aiogram_metrics.track('Unknown message')
 async def incorrect_message_handler(msg: Message):
     await msg.reply(texts.incorrect_message)
 
 
 @dp.callback_query_handler(lambda callback_query: True)
+@aiogram_metrics.track('Stop station tracking')
 async def handle_stop_query(call: CallbackQuery):
     await bot.edit_message_reply_markup(call.from_user.id, call.message.message_id)
     await call.answer(texts.stop_button)
@@ -130,7 +144,8 @@ if __name__ == '__main__':
             host=WEBAPP_HOST,
             port=WEBAPP_PORT,
             skip_updates=True,
-            on_startup=on_start
+            on_startup=on_start,
+            on_shutdown=on_shutdown
         )
     else:
         start_polling(dp, on_startup=on_start)
