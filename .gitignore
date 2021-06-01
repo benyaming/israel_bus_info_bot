@@ -15,3 +15,4 @@ celerybeat-schedule\.dat
 
 celerybeat\.pid
 .env
+Pipfile.lock
