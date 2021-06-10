@@ -32,8 +32,8 @@ async def on_start(dispatcher: Dispatcher):
     logger.info('STARTING BUS BOT...')
     if DOCKER_MODE:
         await bot.set_webhook(WEBHOOK_URL)
-    # db_conn = await aiopg.create_pool(dsn=DSN)
-    # dispatcher['db_pool'] = db_conn
+    db_conn = await aiopg.create_pool(dsn=DSN)
+    dispatcher['db_pool'] = db_conn
 
     await aiogram_metrics.register(METRICS_DSN, METRICS_TABLE_NAME)
 
