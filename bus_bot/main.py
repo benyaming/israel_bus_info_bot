@@ -46,13 +46,27 @@ async def on_shutdown(dispatcher: Dispatcher):
 @dp.errors_handler(exception=MessageNotModified)
 async def not_modified(update: Update, e: MessageNotModified):
     logger.error(repr(e))
+    print(e)
     return True
+
+
+async def response_about_not_working(msg: Message):
+    text = 'Hey!\nFirstly, thank you for using the bot!\n' \
+           'But there is a problem: the Ministry of transport closed the API that the bot used ' \
+           'to get bus timings, and because of that the bot is unable to work at the moment.\n' \
+           'I will try to find another solution, and will update you as soon as possible.\n' \
+           'If you have any idea about how to solve the problem, ' \
+           'feel free to <a href="https://t.me/benyomin">contact me</a>.\n\n' \
+           'Thank you for using\n' \
+           'Sincerely, Benyamin Ginzburg, the bot\'s author.'
+    await msg.reply(text, disable_web_page_preview=True)
 
 
 @dp.message_handler(commands=['start'])
 @aiogram_metrics.track('/start command')
 async def handle_start(message: Message):
-    await bot.send_message(message.chat.id, texts.start_command)
+    await response_about_not_working(message)
+    # await bot.send_message(message.chat.id, texts.start_command)
     await check_user()
 
 
@@ -91,35 +105,37 @@ async def updater(session: Session):
 
 @dp.message_handler(lambda msg: msg.text.isdigit(), content_types=ContentTypes.TEXT)
 async def station_handler(msg: Message):
-    station_valid = await is_station_valid(msg.text)
-    if not station_valid:
-        aiogram_metrics.manual_track('Invalid station')
-        return await msg.reply(texts.invalid_station)
-
-    if msg.from_user.id in SESSION_STORAGE:
-        session = SESSION_STORAGE[msg.from_user.id]
-        is_next_station = True
-    else:
-        session = Session(msg.from_user.id, msg.text)
-        is_next_station = False
-
-    content = await get_lines(station_id=msg.text)
-    kb = get_cancel_button(msg.text)
-    sent = await msg.reply(content, reply_markup=kb)
-    aiogram_metrics.manual_track('Init station schedule')
-
-    if not is_next_station:
-        session.msg_id = sent.message_id
-        asyncio.create_task(updater(session))
-    else:
-        session.next_station = msg.text
-        session.next_msg_id = sent.message_id
+    await response_about_not_working(msg)
+    # station_valid = await is_station_valid(msg.text)
+    # if not station_valid:
+    #     aiogram_metrics.manual_track('Invalid station')
+    #     return await msg.reply(texts.invalid_station)
+    #
+    # if msg.from_user.id in SESSION_STORAGE:
+    #     session = SESSION_STORAGE[msg.from_user.id]
+    #     is_next_station = True
+    # else:
+    #     session = Session(msg.from_user.id, msg.text)
+    #     is_next_station = False
+    #
+    # content = await get_lines(station_id=msg.text)
+    # kb = get_cancel_button(msg.text)
+    # sent = await msg.reply(content, reply_markup=kb)
+    # aiogram_metrics.manual_track('Init station schedule')
+    #
+    # if not is_next_station:
+    #     session.msg_id = sent.message_id
+    #     asyncio.create_task(updater(session))
+    # else:
+    #     session.next_station = msg.text
+    #     session.next_msg_id = sent.message_id
 
 
 @dp.message_handler()
 @aiogram_metrics.track('Unknown message')
 async def incorrect_message_handler(msg: Message):
-    await msg.reply(texts.incorrect_message)
+    await response_about_not_working(msg)
+    # await msg.reply(texts.incorrect_message)
 
 
 @dp.callback_query_handler(lambda callback_query: True)
@@ -127,12 +143,12 @@ async def incorrect_message_handler(msg: Message):
 async def handle_stop_query(call: CallbackQuery):
     await bot.edit_message_reply_markup(call.from_user.id, call.message.message_id)
     await call.answer(texts.stop_button)
-
-    session = SESSION_STORAGE[call.from_user.id]
-    if session.current_station != call.data:
-        await asyncio.sleep(PERIOD)
-
-    session.updates_count = 0
+    #
+    # session = SESSION_STORAGE[call.from_user.id]
+    # if session.current_station != call.data:
+    #     await asyncio.sleep(PERIOD)
+    #
+    # session.updates_count = 0
 
 
 if __name__ == '__main__':
