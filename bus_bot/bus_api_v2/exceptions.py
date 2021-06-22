@@ -1,0 +1,6 @@
+class StationNonExistsException(Exception):
+    ...
+
+
+class ApiNotRespondingException(Exception):
+    ...

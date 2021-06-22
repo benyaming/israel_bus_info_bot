@@ -9,4 +9,5 @@ stop_button = 'Stop updating'
 stop_alert = 'Will stop soon.'
 incorrect_message = 'Text is incorrect, send station number!'
 invalid_station = 'Invalid station number!'
+api_not_responding = 'The source of bus data is unavailable for the moment. Please, try again later.'
 
