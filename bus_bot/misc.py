@@ -13,3 +13,4 @@ loop = asyncio.get_event_loop()
 bot = Bot(TOKEN, parse_mode=types.ParseMode.HTML)
 storage = MemoryStorage()
 dp = Dispatcher(bot, storage=storage)
+session = dp.bot.session
