@@ -27,8 +27,8 @@ from bus_bot.misc import bot, dp, logger
 from bus_bot.sentry_middleware import SentryContextMiddleware
 from bus_bot.sessions import Session, SESSION_STORAGE
 from bus_bot import texts
-from bus_bot.bus_api_v2.client import prepare_station_schedule
-from bus_bot.bus_api_v2 import exceptions
+from bus_bot.bus_api_v3.client import prepare_station_schedule
+from bus_bot.bus_api_v3 import exceptions
 
 ITERATIONS = TTL // PERIOD
 
