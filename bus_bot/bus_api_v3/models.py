@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -44,7 +44,7 @@ class IncomingRoute(BaseModel):
 
 class StopLocation(BaseModel):
     type: str = 'Point'
-    coordinates: Tuple[float, float]
+    coordinates: List[float]
 
 
 IncomingRoutesResponse.update_forward_refs()
