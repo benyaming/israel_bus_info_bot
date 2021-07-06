@@ -23,7 +23,5 @@ TTL = int(getenv('TTL', 900))  # how long message updates (seconds)
 METRICS_DSN = getenv('METRICS_DSN')
 METRICS_TABLE_NAME = getenv('METRICS_TABLE_NAME')
 
-STOP_INFO_URL = getenv('STOP_INFO_URL')
-ARRIVING_LINES_URL = getenv('ARRIVING_LINES_URL')
-
 SENTRY_KEY = getenv('SENTRY_KEY')
+API_URL = getenv('API_URL')
