@@ -6,7 +6,7 @@ from aiogram.types import Update
 class SentryContextMiddleware(BaseMiddleware):
 
     @staticmethod
-    async def on_pre_process_update(update: Update, data: dict):
+    async def on_pre_process_update(update: Update, _):
         if (not update.message) and (not update.callback_query):
             return
 
