@@ -3,7 +3,7 @@ from typing import List
 
 from pydantic import parse_obj_as
 
-from bus_bot.bus_api_v3.exceptions import ApiNotRespondingException
+from bus_bot.bus_api_v3.exceptions import ApiNotRespondingException, StationNonExistsException, exception_by_codes
 from bus_bot.bus_api_v3.models import IncomingRoutesResponse, Stop
 from bus_bot.misc import session
 from bus_bot.config import API_URL
@@ -22,8 +22,12 @@ async def _get_lines_for_station(station_id: int) -> IncomingRoutesResponse:
     url = f'{API_URL}/siri/get_routes_for_stop/{station_id}'
     async with session.get(url) as resp:
         if resp.status > 400:
-            logger.exception((await resp.read()).decode('utf-8'))
-            raise ApiNotRespondingException()
+            body = await resp.json()
+            code = body.get('detail', {}).get('code', 3)
+            exc = exception_by_codes.get(code, 3)
+
+            logger.error(body)
+            raise exc
 
         data = await resp.json()
         arriving_lines = IncomingRoutesResponse(**data)
