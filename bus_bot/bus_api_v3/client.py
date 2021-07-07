@@ -3,7 +3,7 @@ from typing import List
 
 from pydantic import parse_obj_as
 
-from bus_bot.bus_api_v3.exceptions import ApiNotRespondingException, StationNonExistsException
+from bus_bot.bus_api_v3.exceptions import ApiNotRespondingException
 from bus_bot.bus_api_v3.models import IncomingRoutesResponse, Stop
 from bus_bot.misc import session
 from bus_bot.config import API_URL
@@ -40,8 +40,13 @@ async def find_near_stops(lat: float, lng: float) -> List[Stop]:
             raise ApiNotRespondingException()
 
         data = await resp.json()
+
         stops = parse_obj_as(List[Stop], data)
-        return stops
+
+        # temporary solution to delete stops with same id (such as central stations platforms)
+        unique_stops = {stop.code: stop for stop in stops}
+
+        return list(unique_stops.values())
 
 
 async def prepare_station_schedule(station_id: int, is_last_update: bool = False) -> str:
