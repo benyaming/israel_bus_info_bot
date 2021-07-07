@@ -4,11 +4,12 @@ import aiopg
 import sentry_sdk
 from sentry_sdk.integrations.aiohttp import AioHttpIntegration
 import aiogram_metrics
-from aiogram.types import ContentTypes, Message, CallbackQuery, ContentType
+from aiogram.types import ContentTypes, Message, CallbackQuery, ContentType, User
 from aiogram.dispatcher import Dispatcher
 from aiogram.utils.executor import start_webhook, start_polling
 from aiogram.utils.exceptions import MessageNotModified
 
+from bus_bot.bus_api_v3.exceptions import BotException
 from bus_bot.helpers import get_cancel_button, check_user, CallbackPrefix
 from bus_bot.config import (
     DOCKER_MODE,
@@ -59,8 +60,7 @@ async def on_shutdown(_):
 
 
 @dp.errors_handler(exception=MessageNotModified)
-async def handle_not_modified(_, e: MessageNotModified):
-    logger.error(repr(e))
+async def handle_not_modified(*_):
     return True
 
 
@@ -75,6 +75,17 @@ async def handle_station_not_exists(*_):
 async def handle_station_not_exists(*_):
     msg = Message.get_current()
     await msg.reply(texts.api_not_responding)
+    return True
+
+
+@dp.errors_handler(exception=Exception)
+async def handle_unknown_exception(_, e: Exception):
+    if isinstance(e, BotException):
+        return True
+
+    await bot.send_message(User.get_current().id, texts.unknown_exception)
+    logger.exception(e)
+    sentry_sdk.capture_exception(e)
     return True
 
 
