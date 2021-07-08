@@ -3,8 +3,8 @@ from typing import List
 
 from pydantic import parse_obj_as
 
-from bus_bot.bus_api_v3.exceptions import exception_by_codes
-from bus_bot.bus_api_v3.models import IncomingRoutesResponse, Stop
+from bus_bot.core.bus_api_v3.exceptions import exception_by_codes
+from bus_bot.core.bus_api_v3.models import IncomingRoutesResponse, Stop
 from bus_bot.misc import session
 from bus_bot.config import API_URL
 

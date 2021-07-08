@@ -11,7 +11,9 @@ aiopg = "*"
 aiogram-metrics = "*"
 betterlogging = "*"
 pydantic = "*"
-sentry-sdk = "==1.1.0"
+sentry-sdk = "==1.2.0"
+odmantic = "*"
+motor = "*"
 
 [requires]
 python_version = "3.7"

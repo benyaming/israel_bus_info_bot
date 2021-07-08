@@ -6,10 +6,10 @@ from urllib.parse import quote
 
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-from bus_bot.bus_api_v3.client import find_near_stops
+from bus_bot.core.bus_api_v3 import find_near_stops
 from bus_bot.config import MAPBOX_TOKEN
 from bus_bot.misc import session
-from bus_bot.bus_api_v3.models import Stop
+from bus_bot.core.bus_api_v3 import Stop
 from bus_bot.helpers import CallbackPrefix
 
 logger = logging.getLogger('map_generator')

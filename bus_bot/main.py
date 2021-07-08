@@ -1,6 +1,5 @@
 import asyncio
 
-import aiopg
 import sentry_sdk
 from sentry_sdk.integrations.aiohttp import AioHttpIntegration
 import aiogram_metrics
@@ -9,7 +8,7 @@ from aiogram.dispatcher import Dispatcher
 from aiogram.utils.executor import start_webhook, start_polling
 from aiogram.utils.exceptions import MessageNotModified
 
-from bus_bot.bus_api_v3.exceptions import BotException
+from bus_bot.core.bus_api_v3.exceptions import BotException
 from bus_bot.helpers import get_cancel_button, check_user, CallbackPrefix
 from bus_bot.config import (
     DOCKER_MODE,
@@ -18,19 +17,15 @@ from bus_bot.config import (
     WEBHOOK_PATH,
     PERIOD,
     TTL,
-    DSN,
     WEBHOOK_URL,
-    METRICS_DSN,
-    METRICS_TABLE_NAME,
     SENTRY_KEY
 )
-from bus_bot.map_generator.client import get_map_with_points
+from bus_bot.core.map_generator.client import get_map_with_points
 from bus_bot.misc import bot, dp, logger
 from bus_bot.sentry_middleware import SentryContextMiddleware
 from bus_bot.sessions import Session, SESSION_STORAGE
 from bus_bot import texts
-from bus_bot.bus_api_v3.client import prepare_station_schedule
-from bus_bot.bus_api_v3 import exceptions
+from bus_bot.core.bus_api_v3 import prepare_station_schedule, exceptions
 
 ITERATIONS = TTL // PERIOD
 
@@ -44,96 +39,40 @@ logger.info(f'Sentry is {"ENABLED" if SENTRY_KEY else "DISABLED"}')
 dp.middleware.setup(SentryContextMiddleware())
 
 
-async def on_start(dispatcher: Dispatcher):
-    logger.info('STARTING BUS BOT...')
-    if DOCKER_MODE:
-        await bot.set_webhook(WEBHOOK_URL)
-    db_conn = await aiopg.create_pool(dsn=DSN)
-    dispatcher['db_pool'] = db_conn
 
-    await aiogram_metrics.register(METRICS_DSN, METRICS_TABLE_NAME)
-
-
-async def on_shutdown(_):
-    logger.info('SHUTTING DOWN...')
-    await aiogram_metrics.close()
-
-
-@dp.errors_handler(exception=MessageNotModified)
-async def handle_not_modified(*_):
-    return True
-
-
-@dp.errors_handler(exception=exceptions.StationNonExistsException)
-async def handle_station_not_exists(*_):
-    msg = Message.get_current()
-    await msg.reply(texts.invalid_station)
-    return True
-
-
-@dp.errors_handler(exception=exceptions.ApiNotRespondingException)
-async def handle_station_not_exists(*_):
-    msg = Message.get_current()
-    await msg.reply(texts.api_not_responding)
-    return True
-
-
-@dp.errors_handler(exception=Exception)
-async def handle_unknown_exception(_, e: Exception):
-    if isinstance(e, BotException):
-        return True
-
-    await bot.send_message(User.get_current().id, texts.unknown_exception)
-    logger.exception(e)
-    sentry_sdk.capture_exception(e)
-    return True
-
-
-@dp.message_handler(commands=['start'])
-@aiogram_metrics.track('/start command')
-async def handle_start(message: Message):
-    await bot.send_message(message.chat.id, texts.start_command)
-    await check_user()
-
-
-@dp.message_handler(commands=['help'])
-@aiogram_metrics.track('/help command')
-async def handle_help(message: Message):
-    await bot.send_message(message.chat.id, texts.help_command)
-
-
-async def update_message(user_id: int, msg_id: int, station: int, *, is_last_update: bool = False):
-    content = await prepare_station_schedule(station, is_last_update)
-    kb = get_cancel_button(station) if not is_last_update else None
-
-    try:
-        await bot.edit_message_text(content, user_id, msg_id, reply_markup=kb)
-    except MessageNotModified:
-        pass
-
-
-async def updater(session: Session):
-    while True:
-        if session.next_station:
-            asyncio.create_task(
-                update_message(
-                    session.user_id,
-                    session.msg_id,
-                    session.current_station,
-                    is_last_update=True
-                )
-            )
-            session.reset()
-
-        await asyncio.sleep(PERIOD)
-
-        if session.updates_count > 0:
-            await update_message(session.user_id, session.msg_id, session.current_station)
-            session.updates_count -= 1
-        elif session.updates_count == 0:
-            await update_message(session.user_id, session.msg_id, session.current_station, is_last_update=True)
-            del SESSION_STORAGE[session.user_id]
-            break
+#
+# async def update_message(user_id: int, msg_id: int, station: int, *, is_last_update: bool = False):
+#     content = await prepare_station_schedule(station, is_last_update)
+#     kb = get_cancel_button(station) if not is_last_update else None
+#
+#     try:
+#         await bot.edit_message_text(content, user_id, msg_id, reply_markup=kb)
+#     except MessageNotModified:
+#         pass
+#
+#
+# async def updater(session: Session):
+#     while True:
+#         if session.next_station:
+#             asyncio.create_task(
+#                 update_message(
+#                     session.user_id,
+#                     session.msg_id,
+#                     session.current_station,
+#                     is_last_update=True
+#                 )
+#             )
+#             session.reset()
+#
+#         await asyncio.sleep(PERIOD)
+#
+#         if session.updates_count > 0:
+#             await update_message(session.user_id, session.msg_id, session.current_station)
+#             session.updates_count -= 1
+#         elif session.updates_count == 0:
+#             await update_message(session.user_id, session.msg_id, session.current_station, is_last_update=True)
+#             del SESSION_STORAGE[session.user_id]
+#             break
 
 
 @dp.message_handler(lambda msg: msg.text.isdigit(), content_types=ContentTypes.TEXT)

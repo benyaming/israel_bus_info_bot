@@ -1,4 +1,4 @@
-name: Israel bus bot CI
+name: Israel core bot CI
 
 on:
   push:
@@ -16,7 +16,7 @@ jobs:
       - name: Docker login
         run: docker login -u ${{ secrets.DOCKER_USER }} -p ${{ secrets.DOCKER_PASSWORD }}
       - name: Build
-        run: docker build -t bus-bot .
+        run: docker build -t core-bot .
       - name: Tags
         run: |
           docker tag bus-bot ${{ secrets.DOCKER_USER }}/bus-bot:${{ github.sha }}

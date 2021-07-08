@@ -10,12 +10,9 @@ WEBHOOK_URL = getenv('WEBHOOK_URL')
 
 DOCKER_MODE = getenv('DOCKER_MODE')
 
-DB_HOST = getenv('DB_HOST')
-DB_PORT = getenv('DB_PORT')
-DB_USER = getenv('DB_USER')
-DB_PASS = getenv('DB_PASS')
+DB_URL = getenv('DB_URL')
 DB_NAME = getenv('DB_NAME')
-DSN = f'dbname={DB_NAME} user={DB_USER} password={DB_PASS} host={DB_HOST} port={DB_PORT}'
+DB_COLLECTION_NAME = getenv('DB_COLLECTION_NAME')
 
 PERIOD = int(getenv('PERIOD', 5))  # how often message updates (seconds)
 TTL = int(getenv('TTL', 900))  # how long message updates (seconds)
