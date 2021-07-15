@@ -1,15 +1,11 @@
-import asyncio
+import logging
 
 import sentry_sdk
 from sentry_sdk.integrations.aiohttp import AioHttpIntegration
-import aiogram_metrics
-from aiogram.types import ContentTypes, Message, CallbackQuery, ContentType, User
-from aiogram.dispatcher import Dispatcher
+from aiogram.types import Message, ContentType
 from aiogram.utils.executor import start_webhook, start_polling
-from aiogram.utils.exceptions import MessageNotModified
 
-from bus_bot.core.bus_api_v3.exceptions import BotException
-from bus_bot.helpers import get_cancel_button, check_user, CallbackPrefix
+from bus_bot.handlers.bot_lifecycle_hooks import on_start, on_shutdown
 from bus_bot.config import (
     DOCKER_MODE,
     WEBAPP_PORT,
@@ -17,15 +13,13 @@ from bus_bot.config import (
     WEBHOOK_PATH,
     PERIOD,
     TTL,
-    WEBHOOK_URL,
     SENTRY_KEY
 )
 from bus_bot.core.map_generator.client import get_map_with_points
-from bus_bot.misc import bot, dp, logger
+from bus_bot.misc import dp
 from bus_bot.sentry_middleware import SentryContextMiddleware
-from bus_bot.sessions import Session, SESSION_STORAGE
-from bus_bot import texts
-from bus_bot.core.bus_api_v3 import prepare_station_schedule, exceptions
+
+logger = logging.getLogger('bot')
 
 ITERATIONS = TTL // PERIOD
 
@@ -75,70 +69,70 @@ dp.middleware.setup(SentryContextMiddleware())
 #             break
 
 
-@dp.message_handler(lambda msg: msg.text.isdigit(), content_types=ContentTypes.TEXT)
-async def station_handler(msg: Message):
-    if msg.from_user.id in SESSION_STORAGE:
-        session = SESSION_STORAGE[msg.from_user.id]
-        is_next_station = True
-    else:
-        session = Session(msg.from_user.id, msg.text)
-        is_next_station = False
-
-    content = await prepare_station_schedule(station_id=msg.text)
-    kb = get_cancel_button(msg.text)
-    sent = await msg.reply(content, reply_markup=kb)
-    aiogram_metrics.manual_track('Init station schedule')
-
-    if not is_next_station:
-        session.msg_id = sent.message_id
-        asyncio.create_task(updater(session))
-    else:
-        session.next_station = msg.text
-        session.next_msg_id = sent.message_id
-
-
-@dp.message_handler()
-@aiogram_metrics.track('Unknown message')
-async def incorrect_message_handler(msg: Message):
-    await msg.reply(texts.incorrect_message)
+# @dp.message_handler(lambda msg: msg.text.isdigit(), content_types=ContentTypes.TEXT)
+# async def station_handler(msg: Message):
+#     if msg.from_user.id in SESSION_STORAGE:
+#         session = SESSION_STORAGE[msg.from_user.id]
+#         is_next_station = True
+#     else:
+#         session = Session(msg.from_user.id, msg.text)
+#         is_next_station = False
+#
+#     content = await prepare_station_schedule(station_id=msg.text)
+#     kb = get_cancel_button(msg.text)
+#     sent = await msg.reply(content, reply_markup=kb)
+#     aiogram_metrics.manual_track('Init station schedule')
+#
+#     if not is_next_station:
+#         session.msg_id = sent.message_id
+#         asyncio.create_task(updater(session))
+#     else:
+#         session.next_station = msg.text
+#         session.next_msg_id = sent.message_id
 
 
-@dp.callback_query_handler(text_startswith=CallbackPrefix.stop_updates)
-@aiogram_metrics.track('Stop station tracking')
-async def handle_stop_query(call: CallbackQuery):
-    await bot.edit_message_reply_markup(call.from_user.id, call.message.message_id)
-    await call.answer(texts.stop_button)
-
-    session = SESSION_STORAGE[call.from_user.id]
-    if session.current_station != call.data:
-        await asyncio.sleep(PERIOD)
-
-    session.updates_count = 0
+# @dp.message_handler()
+# @aiogram_metrics.track('Unknown message')
+# async def incorrect_message_handler(msg: Message):
+#     await msg.reply(texts.incorrect_message)
 
 
-@dp.callback_query_handler(text_startswith=CallbackPrefix.get_stop)
-@aiogram_metrics.track('Stop from map selected')
-async def handle_station_selection(call: CallbackQuery):
-    await call.answer()
-    stop_code = int(call.data.split(CallbackPrefix.get_stop)[1])
+# @dp.callback_query_handler(text_startswith=CallbackPrefix.stop_updates)
+# @aiogram_metrics.track('Stop station tracking')
+# async def handle_stop_query(call: CallbackQuery):
+#     await bot.edit_message_reply_markup(call.from_user.id, call.message.message_id)
+#     await call.answer(texts.stop_button)
+#
+#     session = SESSION_STORAGE[call.from_user.id]
+#     if session.current_station != call.data:
+#         await asyncio.sleep(PERIOD)
+#
+#     session.updates_count = 0
 
-    if call.from_user.id in SESSION_STORAGE:
-        session = SESSION_STORAGE[call.from_user.id]
-        is_next_station = True
-    else:
-        session = Session(call.from_user.id, stop_code)
-        is_next_station = False
 
-    content = await prepare_station_schedule(station_id=stop_code)
-    kb = get_cancel_button(stop_code)
-    sent = await bot.send_message(call.from_user.id, content, reply_markup=kb)
-
-    if not is_next_station:
-        session.msg_id = sent.message_id
-        asyncio.create_task(updater(session))
-    else:
-        session.next_station = stop_code
-        session.next_msg_id = sent.message_id
+# @dp.callback_query_handler(text_startswith=CallbackPrefix.get_stop)
+# @aiogram_metrics.track('Stop from map selected')
+# async def handle_station_selection(call: CallbackQuery):
+#     await call.answer()
+#     stop_code = int(call.data.split(CallbackPrefix.get_stop)[1])
+#
+#     if call.from_user.id in SESSION_STORAGE:
+#         session = SESSION_STORAGE[call.from_user.id]
+#         is_next_station = True
+#     else:
+#         session = Session(call.from_user.id, stop_code)
+#         is_next_station = False
+#
+#     content = await prepare_station_schedule(station_id=stop_code)
+#     kb = get_cancel_button(stop_code)
+#     sent = await bot.send_message(call.from_user.id, content, reply_markup=kb)
+#
+#     if not is_next_station:
+#         session.msg_id = sent.message_id
+#         asyncio.create_task(updater(session))
+#     else:
+#         session.next_station = stop_code
+#         session.next_msg_id = sent.message_id
 
 
 @dp.message_handler(content_types=[ContentType.LOCATION, ContentType.VENUE])

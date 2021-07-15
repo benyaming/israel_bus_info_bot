@@ -8,6 +8,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from odmantic import AIOEngine
 
 from .config import TOKEN, DB_URL, DB_NAME, DB_COLLECTION_NAME
+from .service.session_service import Worker
 
 bl.basic_colorized_config(level=bl.INFO)
 
@@ -20,3 +21,4 @@ session = dp.bot.session
 motor_client = AsyncIOMotorClient(DB_URL)
 collection: AgnosticCollection = motor_client[DB_NAME][DB_COLLECTION_NAME]
 db_engine = AIOEngine(motor_client, database=DB_NAME)
+update_service = Worker()

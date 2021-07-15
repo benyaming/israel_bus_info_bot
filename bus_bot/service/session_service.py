@@ -1,13 +1,10 @@
 import asyncio
-from typing import Optional, Dict, List
+from typing import Optional, Dict
+from datetime import datetime as dt
 
-from aiogram.utils.exceptions import MessageNotModified
-from aiogram.types import User, Message
+from aiogram.types import User
 from pydantic import BaseModel
 
-from bus_bot.core.bus_api_v3.client import prepare_station_schedule
-from bus_bot.helpers import get_cancel_button
-from bus_bot.misc import bot
 from bus_bot.config import TTL, PERIOD
 
 UPDATES_COUNT = TTL // PERIOD
@@ -62,11 +59,11 @@ UPDATES_COUNT = TTL // PERIOD
 class Watcher(BaseModel):
     user_id: int
     station_code: int
-    is_ready_for_delete: bool = False
     next_station_code: Optional[int]
     updates_count = UPDATES_COUNT
+    updated_at: float = 1
 
-    async def run_update(self):
+    async def run_update(self, is_last_update: bool = False):
         ...
 
     def refresh(self):
@@ -78,41 +75,95 @@ class Watcher(BaseModel):
 
 
 class WatcherRepository:
-    async def get_watcher(self, user_id: int):
-        ...
+    # async def get_watcher(self, user_id: int):
+    #     ...
+    __storage: Dict[int, Watcher] = {}
 
     async def save_watcher(self, watcher: Watcher):
-        ...
+        self.__storage[watcher.user_id] = watcher
+
+    async def get_watcher(self, user_id: int) -> Optional[Watcher]:
+        return self.__storage.get(user_id)
 
     async def delete_watcher(self, user_id: int):
+        del self.__storage[user_id]
+
+    # async def get_all_watchers(self) -> List[Watcher]:
+    #     ...
+
+    async def get_oldest_watcher(self) -> Optional[Watcher]:
+        if len(self.__storage) == 0:
+            return None
+        oldest_watcher = min(self.__storage.values(), key=lambda w: w.updated_at)
+        return oldest_watcher
+
+
+
+class Limiter:
+    __slots__ = ('__quantity', '__period', '__values')
+
+    def __init__(self, quantity: int, period: float):
+        self.__quantity = quantity
+        self.__period = period
+        self.__values = dict()
+
+    def check(self) -> bool:
+        return True
+
+    def put(self):
         ...
 
 
-    async def get_all_watchers(self) -> List[Watcher]:
-        ...
+limiter = Limiter(300, 5)
 
 
-class SessionRunner:
-    watcher_repository: WatcherRepository
+class Worker:
+    watcher_repository = WatcherRepository()
     period: int = PERIOD
 
-    async def update_infinite(self):
+    async def _process_watcher(self, watcher: Watcher):
+        if watcher.updated_at == 0:
+            await watcher.run_update(is_last_update=True)
+            await self.watcher_repository.delete_watcher(watcher.user_id)
+        elif watcher.next_station_code:
+            await watcher.run_update(is_last_update=True)
+            watcher.refresh()
+        else:
+            await watcher.run_update()
+
+        watcher.updates_count -= 1
+        if watcher.updates_count == 0:
+            watcher.updated_at = 0
+        else:
+            watcher.updated_at = dt.now().timestamp()
+
+    async def run_worker(self):
         while True:
-            for watcher in await self.watcher_repository.get_all_watchers():
-                await watcher.run_update()
+            if not limiter.check():
+                await asyncio.sleep(0.1)
+                continue
 
-                if watcher.is_ready_for_delete:
-                    await self.watcher_repository.delete_watcher(watcher.user_id)
-                elif watcher.next_station_code:
-                    watcher.refresh()
-                    await watcher.run_update()
+            watcher = await self.watcher_repository.get_oldest_watcher()
+            if not watcher:
+                await asyncio.sleep(0.1)
+                continue
 
-    async def start_watch(self, station_code: int):
+            try:
+                await self._process_watcher(watcher)
+            finally:
+                limiter.put()
+
+    async def add_watch(self, station_code: int):
         user_id = User.get_current().id
         watcher = Watcher(user_id=user_id, station_code=station_code)
         await self.watcher_repository.save_watcher(watcher)
 
-    async def stop_watch(self):
+    async def remove_watch(self):
         user_id = User.get_current().id
-        watcher = self.watcher_repository.get_watcher(user_id)
+        watcher = await self.watcher_repository.get_watcher(user_id)
+        if not watcher:
+            # todo
+            raise ValueError('no watcher found')
+        watcher.updated_at = 0
+        await self.watcher_repository.save_watcher(watcher)
 
