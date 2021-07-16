@@ -5,7 +5,6 @@ import aiogram_metrics
 from bus_bot.config import DOCKER_MODE, WEBHOOK_URL
 from bus_bot import misc
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -14,7 +13,7 @@ async def on_start(_):
     if DOCKER_MODE:
         await misc.bot.set_webhook(WEBHOOK_URL)
 
-    await misc.update_service.run_worker()
+    await misc.update_service.run_in_background()
     # db_conn = await aiopg.create_pool(dsn=DSN)
     # dispatcher['db_pool'] = db_conn
     #

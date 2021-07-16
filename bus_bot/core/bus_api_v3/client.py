@@ -1,16 +1,16 @@
 import logging
 from typing import List
 
+from aiogram import Bot
 from pydantic import parse_obj_as
 
 from bus_bot.core.bus_api_v3.exceptions import exception_by_codes
 from bus_bot.core.bus_api_v3.models import IncomingRoutesResponse, Stop
-from bus_bot.misc import session
 from bus_bot.config import API_URL
 
 
 logger = logging.getLogger('bus_api')
-
+# session = Bot.get_current().session
 
 TRANSPORT_ICONS = {
     '2': '🚄',
@@ -20,7 +20,7 @@ TRANSPORT_ICONS = {
 
 async def _get_lines_for_station(station_id: int) -> IncomingRoutesResponse:
     url = f'{API_URL}/siri/get_routes_for_stop/{station_id}'
-    async with session.get(url) as resp:
+    async with Bot.get_current().session.get(url) as resp:
         if resp.status > 400:
             body = await resp.json()
             code = body.get('detail', {}).get('code', 3)
@@ -38,7 +38,7 @@ async def find_near_stops(lat: float, lng: float) -> List[Stop]:
     url = f'{API_URL}/stop/near'
     params = {'lat': lat, 'lng': lng, 'radius': 200}
 
-    async with session.get(url, params=params) as resp:
+    async with Bot.get_current().session.get(url, params=params) as resp:
         if resp.status > 400:
             body = await resp.json()
             code = body.get('detail', {}).get('code', 3)

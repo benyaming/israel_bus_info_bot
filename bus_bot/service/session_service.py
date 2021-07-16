@@ -1,76 +1,46 @@
 import asyncio
+import logging
 from typing import Optional, Dict
 from datetime import datetime as dt
 
+from aiogram import Bot
 from aiogram.types import User
+from aiogram.utils.exceptions import MessageNotModified
 from pydantic import BaseModel
 
 from bus_bot.config import TTL, PERIOD
+from bus_bot.core.bus_api_v3.client import prepare_station_schedule
+from bus_bot.helpers import get_cancel_button
 
 UPDATES_COUNT = TTL // PERIOD
-
-
-# class Session:
-#     user_id: int
-#     msg_id: int
-#     next_msg_id: Optional[int] = None
-#     current_station: int
-#     next_station: Optional[int] = None
-#     updates_count = UPDATES_COUNT
-#
-#     def __init__(self, user_id: int, station: int):
-#         self.user_id = user_id
-#         self.current_station = station
-#
-#     async def init(self):
-#         while True:
-#             if self.next_station:
-#                 asyncio.create_task(
-#                     self.update_message(is_last_update=True)
-#                 )
-#                 self.reset()
-#
-#             await asyncio.sleep(PERIOD)
-#
-#             if self.updates_count > 0:
-#                 await self.update_message()
-#                 self.updates_count -= 1
-#             elif self.updates_count == 0:
-#                 await self.update_message(is_last_update=True)
-#                 break
-#
-#     def reset(self):
-#         self.updates_count = UPDATES_COUNT
-#         self.current_station = self.next_station
-#         self.msg_id = self.next_msg_id
-#         self.next_msg_id = None
-#         self.next_station = None
-#
-#     async def update_message(self, is_last_update: bool = False):
-#         content = await prepare_station_schedule(self.current_station, is_last_update)
-#         kb = get_cancel_button(self.current_station) if not is_last_update else None
-#
-#         try:
-#             await bot.edit_message_text(content, self.user_id, self.msg_id, reply_markup=kb)
-#         except MessageNotModified:
-#             pass
 
 
 class Watcher(BaseModel):
     user_id: int
     station_code: int
+    message_id: int
     next_station_code: Optional[int]
+    next_message_id: Optional[int]
     updates_count = UPDATES_COUNT
     updated_at: float = 1
 
     async def run_update(self, is_last_update: bool = False):
-        ...
+        content = await prepare_station_schedule(self.station_code, is_last_update)
+        bot = Bot.get_current()
+        kb = get_cancel_button(self.station_code)
+
+        try:
+            await bot.edit_message_text(content, self.user_id, self.message_id, reply_markup=kb)
+        except MessageNotModified:
+            pass
 
     def refresh(self):
-        if not self.next_station_code:
+        if not self.next_station_code or not self.next_message_id:
             return
         self.station_code = self.next_station_code
+        self.message_id = self.next_message_id
         self.next_station_code = None
+        self.next_message_id = None
         self.updates_count = UPDATES_COUNT
 
 
@@ -98,7 +68,6 @@ class WatcherRepository:
         return oldest_watcher
 
 
-
 class Limiter:
     __slots__ = ('__quantity', '__period', '__values')
 
@@ -121,11 +90,13 @@ class Worker:
     watcher_repository = WatcherRepository()
     period: int = PERIOD
 
+    __worker: asyncio.Task
+
     async def _process_watcher(self, watcher: Watcher):
         if watcher.updated_at == 0:
             await watcher.run_update(is_last_update=True)
             await self.watcher_repository.delete_watcher(watcher.user_id)
-        elif watcher.next_station_code:
+        elif watcher.next_station_code and watcher.next_message_id:
             await watcher.run_update(is_last_update=True)
             watcher.refresh()
         else:
@@ -137,7 +108,9 @@ class Worker:
         else:
             watcher.updated_at = dt.now().timestamp()
 
-    async def run_worker(self):
+        await self.watcher_repository.save_watcher(watcher)
+
+    async def _run_worker(self):
         while True:
             if not limiter.check():
                 await asyncio.sleep(0.1)
@@ -148,14 +121,28 @@ class Worker:
                 await asyncio.sleep(0.1)
                 continue
 
+            if dt.now().timestamp() - watcher.updated_at < PERIOD:
+                continue
+
             try:
                 await self._process_watcher(watcher)
+            except Exception as e:
+                logging.exception(e)
             finally:
                 limiter.put()
 
-    async def add_watch(self, station_code: int):
+    async def run_in_background(self):
+        self.__worker = asyncio.create_task(self._run_worker())
+
+    async def add_watch(self, station_code: int, message_id: int):
         user_id = User.get_current().id
-        watcher = Watcher(user_id=user_id, station_code=station_code)
+
+        watcher = await self.watcher_repository.get_watcher(user_id)
+        if watcher:
+            watcher.next_station_code = station_code
+        else:
+            now = dt.now().timestamp()
+            watcher = Watcher(user_id=user_id, station_code=station_code, message_id=message_id, updated_at=now)
         await self.watcher_repository.save_watcher(watcher)
 
     async def remove_watch(self):
