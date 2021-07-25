@@ -81,7 +81,11 @@ async def handle_station_not_exists(*_):
 @dp.errors_handler(exception=exceptions.ApiNotRespondingException)
 async def handle_station_not_exists(*_):
     msg = Message.get_current()
-    await msg.reply(texts.api_not_responding)
+    if msg:
+        await msg.reply(texts.api_not_responding)
+    else:
+        call = CallbackQuery.get_current()
+        await call.answer(texts.api_not_responding)
     return True
 
 
@@ -187,7 +191,6 @@ async def handle_stop_query(call: CallbackQuery):
 @dp.callback_query_handler(text_startswith=CallbackPrefix.get_stop)
 @aiogram_metrics.track('Stop from map selected')
 async def handle_station_selection(call: CallbackQuery):
-    await call.answer()
     stop_code = int(call.data.split(CallbackPrefix.get_stop)[1])
 
     if call.from_user.id in SESSION_STORAGE:
@@ -207,6 +210,7 @@ async def handle_station_selection(call: CallbackQuery):
     else:
         session.next_station = stop_code
         session.next_msg_id = sent.message_id
+    await call.answer()
 
 
 @dp.message_handler(content_types=[ContentType.LOCATION, ContentType.VENUE])
