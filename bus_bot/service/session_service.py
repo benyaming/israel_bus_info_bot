@@ -27,7 +27,7 @@ class Watcher(BaseModel):
     async def run_update(self, is_last_update: bool = False):
         content = await prepare_station_schedule(self.station_code, is_last_update)
         bot = Bot.get_current()
-        kb = get_cancel_button(self.station_code)
+        kb = get_cancel_button(self.station_code) if not is_last_update else None
 
         try:
             await bot.edit_message_text(content, self.user_id, self.message_id, reply_markup=kb)
@@ -45,8 +45,6 @@ class Watcher(BaseModel):
 
 
 class WatcherRepository:
-    # async def get_watcher(self, user_id: int):
-    #     ...
     __storage: Dict[int, Watcher] = {}
 
     async def save_watcher(self, watcher: Watcher):
@@ -57,9 +55,6 @@ class WatcherRepository:
 
     async def delete_watcher(self, user_id: int):
         del self.__storage[user_id]
-
-    # async def get_all_watchers(self) -> List[Watcher]:
-    #     ...
 
     async def get_oldest_watcher(self) -> Optional[Watcher]:
         if len(self.__storage) == 0:
@@ -140,6 +135,7 @@ class Worker:
         watcher = await self.watcher_repository.get_watcher(user_id)
         if watcher:
             watcher.next_station_code = station_code
+            watcher.next_message_id = message_id
         else:
             now = dt.now().timestamp()
             watcher = Watcher(user_id=user_id, station_code=station_code, message_id=message_id, updated_at=now)
@@ -149,8 +145,6 @@ class Worker:
         user_id = User.get_current().id
         watcher = await self.watcher_repository.get_watcher(user_id)
         if not watcher:
-            # todo
-            raise ValueError('no watcher found')
+            raise ValueError('No watcher found')
         watcher.updated_at = 0
         await self.watcher_repository.save_watcher(watcher)
-
