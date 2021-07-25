@@ -22,6 +22,7 @@ async def _get_lines_for_station(station_id: int) -> IncomingRoutesResponse:
     url = f'{API_URL}/siri/get_routes_for_stop/{station_id}'
     async with session.get(url) as resp:
         if resp.status > 400:
+            logging.error((await resp.read()).decode('utf-8'))
             body = await resp.json()
             code = body.get('detail', {}).get('code', 3)
             exc = exception_by_codes.get(code, ApiNotRespondingException)
