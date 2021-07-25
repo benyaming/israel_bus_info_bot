@@ -19,6 +19,10 @@ STILE_ID = 'mapbox/streets-v11'
 IMG_SIZE = '500x500'
 
 
+class NoStopsException(Exception):
+    ...
+
+
 def _get_marker_color(stop: Stop) -> str:
     if stop.floor == 'תחנת רכבת':
         color = '#066ed6'
@@ -59,6 +63,9 @@ def _get_kb_for_stops(stops: List[Stop]) -> InlineKeyboardMarkup:
 
 async def get_map_with_points(lat: float, lng: float) -> Tuple[BytesIO, InlineKeyboardMarkup]:
     stops = await find_near_stops(lat, lng)
+    if len(stops) == 0:
+        raise NoStopsException
+
     params = {
         'access_token': MAPBOX_TOKEN
     }

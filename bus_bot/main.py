@@ -24,7 +24,7 @@ from bus_bot.config import (
     METRICS_TABLE_NAME,
     SENTRY_KEY
 )
-from bus_bot.map_generator.client import get_map_with_points
+from bus_bot.map_generator.client import get_map_with_points, NoStopsException
 from bus_bot.misc import bot, dp, logger
 from bus_bot.sentry_middleware import SentryContextMiddleware
 from bus_bot.sessions import Session, SESSION_STORAGE
@@ -71,6 +71,13 @@ async def handle_station_not_exists(*_):
     return True
 
 
+@dp.errors_handler(exception=NoStopsException)
+async def handle_station_not_exists(*_):
+    msg = Message.get_current()
+    await msg.reply(texts.no_stops_found)
+    return True
+
+
 @dp.errors_handler(exception=exceptions.ApiNotRespondingException)
 async def handle_station_not_exists(*_):
     msg = Message.get_current()
@@ -80,7 +87,7 @@ async def handle_station_not_exists(*_):
 
 @dp.errors_handler(exception=Exception)
 async def handle_unknown_exception(_, e: Exception):
-    if isinstance(e, BotException):
+    if isinstance(e, (BotException, NoStopsException)):
         return True
 
     await bot.send_message(User.get_current().id, texts.unknown_exception)
