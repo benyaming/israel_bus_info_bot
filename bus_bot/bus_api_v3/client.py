@@ -59,7 +59,7 @@ async def find_near_stops(lat: float, lng: float) -> List[Stop]:
 async def prepare_station_schedule(station_id: int, is_last_update: bool = False) -> str:
     arriving_lines = await _get_lines_for_station(station_id)
 
-    response_lines = [f'<b>{arriving_lines.stop_info.name}</b>\n']
+    response_lines = [f'<b>{arriving_lines.stop_info.name} ({arriving_lines.stop_info.id})</b>\n']
 
     for route in arriving_lines.incoming_routes:
         eta = f'{route.eta} min' if route.eta != 0 else 'now'

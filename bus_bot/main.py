@@ -67,14 +67,22 @@ async def handle_not_modified(*_):
 @dp.errors_handler(exception=exceptions.StationNonExistsException)
 async def handle_station_not_exists(*_):
     msg = Message.get_current()
-    await msg.reply(texts.invalid_station)
+    if msg:
+        await msg.reply(texts.api_not_responding)
+    else:
+        call = CallbackQuery.get_current()
+        await call.answer(texts.invalid_station)
     return True
 
 
 @dp.errors_handler(exception=NoStopsException)
 async def handle_station_not_exists(*_):
     msg = Message.get_current()
-    await msg.reply(texts.no_stops_found)
+    if msg:
+        await msg.reply(texts.api_not_responding)
+    else:
+        call = CallbackQuery.get_current()
+        await call.answer(texts.no_stops_found)
     return True
 
 

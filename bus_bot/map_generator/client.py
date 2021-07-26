@@ -55,7 +55,7 @@ def _get_kb_for_stops(stops: List[Stop]) -> InlineKeyboardMarkup:
     kb = InlineKeyboardMarkup()
     for i, stop in enumerate(stops, 1):
         kb.row(InlineKeyboardButton(
-            text=f'{i} — {stop.name}',
+            text=f'{i} — {stop.name} ({stop.id})',
             callback_data=f'{CallbackPrefix.get_stop}{stop.code}'
         ))
     return kb
