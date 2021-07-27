@@ -2,7 +2,6 @@ import logging
 
 import sentry_sdk
 from sentry_sdk.integrations.aiohttp import AioHttpIntegration
-from aiogram.types import Message, ContentType
 from aiogram.utils.executor import start_webhook, start_polling
 
 import bus_bot.handlers
@@ -17,7 +16,6 @@ from bus_bot.config import (
     TTL,
     SENTRY_KEY
 )
-from bus_bot.core.map_generator.client import get_map_with_points
 from bus_bot.sentry_middleware import SentryContextMiddleware
 
 logger = logging.getLogger('bot')
