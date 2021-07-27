@@ -46,9 +46,6 @@ dp.middleware.setup(SentryContextMiddleware())
 
 
 
-
-
-
 if __name__ == '__main__':
     if DOCKER_MODE:
 

@@ -1,9 +1,7 @@
 [[source]]
-name = "pypi"
 url = "https://pypi.org/simple"
 verify_ssl = true
-
-[dev-packages]
+name = "pypi"
 
 [packages]
 aiogram = "*"
@@ -15,5 +13,7 @@ sentry-sdk = "==1.2.0"
 odmantic = "*"
 motor = "*"
 
+[dev-packages]
+
 [requires]
-python_version = "3.7"
+python_version = "3.9"
