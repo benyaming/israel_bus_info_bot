@@ -4,7 +4,7 @@ from typing import List
 from aiogram import Bot
 from pydantic import parse_obj_as
 
-from bus_bot.core.bus_api_v3.exceptions import exception_by_codes
+from bus_bot.core.bus_api_v3.exceptions import exception_by_codes, ApiNotRespondingException
 from bus_bot.core.bus_api_v3.models import IncomingRoutesResponse, Stop
 from bus_bot.config import API_URL
 
@@ -22,12 +22,13 @@ async def _get_lines_for_station(station_id: int) -> IncomingRoutesResponse:
     url = f'{API_URL}/siri/get_routes_for_stop/{station_id}'
     async with Bot.get_current().session.get(url) as resp:
         if resp.status > 400:
+            logging.error((await resp.read()).decode('utf-8'))
             body = await resp.json()
             code = body.get('detail', {}).get('code', 3)
-            exc = exception_by_codes.get(code, 3)
+            exc = exception_by_codes.get(code, ApiNotRespondingException)
 
             logger.error(body)
-            raise exc
+            raise exc()
 
         data = await resp.json()
         arriving_lines = IncomingRoutesResponse(**data)
@@ -58,7 +59,7 @@ async def find_near_stops(lat: float, lng: float) -> List[Stop]:
 async def prepare_station_schedule(station_id: int, is_last_update: bool = False) -> str:
     arriving_lines = await _get_lines_for_station(station_id)
 
-    response_lines = [f'<b>{arriving_lines.stop_info.name}</b>\n']
+    response_lines = [f'<b>{arriving_lines.stop_info.name} ({arriving_lines.stop_info.id})</b>\n']
 
     for route in arriving_lines.incoming_routes:
         eta = f'{route.eta} min' if route.eta != 0 else 'now'
