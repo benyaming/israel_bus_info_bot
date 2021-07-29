@@ -6,21 +6,21 @@ from urllib.parse import quote
 
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-from bus_bot.bus_api_v3.client import find_near_stops
 from bus_bot.config import MAPBOX_TOKEN
+from bus_bot.clients.bus_api.client import find_near_stops
+from bus_bot.clients.bus_api.exceptions import NoStopsException
+from bus_bot.clients.bus_api.models import Stop
 from bus_bot.misc import session
-from bus_bot.bus_api_v3.models import Stop
 from bus_bot.helpers import CallbackPrefix
+
+
+__all__ = ['get_map_with_points']
 
 logger = logging.getLogger('map_generator')
 
 MAP_ZOOM = 15.5
 STILE_ID = 'mapbox/streets-v11'
 IMG_SIZE = '500x500'
-
-
-class NoStopsException(Exception):
-    ...
 
 
 def _get_marker_color(stop: Stop) -> str:
@@ -55,7 +55,7 @@ def _get_kb_for_stops(stops: List[Stop]) -> InlineKeyboardMarkup:
     kb = InlineKeyboardMarkup()
     for i, stop in enumerate(stops, 1):
         kb.row(InlineKeyboardButton(
-            text=f'{i} — {stop.name} ({stop.id})',
+            text=f'{i} — {stop.name} ({stop.code})',
             callback_data=f'{CallbackPrefix.get_stop}{stop.code}'
         ))
     return kb

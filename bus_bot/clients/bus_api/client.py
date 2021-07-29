@@ -1,16 +1,17 @@
 import logging
 from typing import List
 
+from aiogram import Bot
 from pydantic import parse_obj_as
 
-from bus_bot.bus_api_v3.exceptions import exception_by_codes, ApiNotRespondingException
-from bus_bot.bus_api_v3.models import IncomingRoutesResponse, Stop
-from bus_bot.misc import session
+from bus_bot.clients.bus_api.exceptions import exception_by_codes, ApiNotRespondingException
+from bus_bot.clients.bus_api.models import IncomingRoutesResponse, Stop
 from bus_bot.config import API_URL
 
 
-logger = logging.getLogger('bus_api')
+__all__ = ['find_near_stops', 'prepare_station_schedule']
 
+logger = logging.getLogger('bus_api')
 
 TRANSPORT_ICONS = {
     '2': '🚄',
@@ -20,7 +21,7 @@ TRANSPORT_ICONS = {
 
 async def _get_lines_for_station(station_id: int) -> IncomingRoutesResponse:
     url = f'{API_URL}/siri/get_routes_for_stop/{station_id}'
-    async with session.get(url) as resp:
+    async with Bot.get_current().session.get(url) as resp:
         if resp.status > 400:
             logging.error((await resp.read()).decode('utf-8'))
             body = await resp.json()
@@ -39,7 +40,7 @@ async def find_near_stops(lat: float, lng: float) -> List[Stop]:
     url = f'{API_URL}/stop/near'
     params = {'lat': lat, 'lng': lng, 'radius': 200}
 
-    async with session.get(url, params=params) as resp:
+    async with Bot.get_current().session.get(url, params=params) as resp:
         if resp.status > 400:
             body = await resp.json()
             code = body.get('detail', {}).get('code', 3)
@@ -59,7 +60,7 @@ async def find_near_stops(lat: float, lng: float) -> List[Stop]:
 async def prepare_station_schedule(station_id: int, is_last_update: bool = False) -> str:
     arriving_lines = await _get_lines_for_station(station_id)
 
-    response_lines = [f'<b>{arriving_lines.stop_info.name} ({arriving_lines.stop_info.id})</b>\n']
+    response_lines = [f'<b>{arriving_lines.stop_info.name} ({arriving_lines.stop_info.code})</b>\n']
 
     for route in arriving_lines.incoming_routes:
         eta = f'{route.eta} min' if route.eta != 0 else 'now'
