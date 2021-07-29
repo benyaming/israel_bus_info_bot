@@ -2,8 +2,9 @@ import logging
 
 import aiogram_metrics
 
-from bus_bot.config import DOCKER_MODE, WEBHOOK_URL
 from bus_bot import misc
+from bus_bot.config import DOCKER_MODE, WEBHOOK_URL
+from bus_bot.handlers.commands import default_commands
 
 logger = logging.getLogger(__name__)
 
@@ -13,13 +14,11 @@ async def on_start(_):
     if DOCKER_MODE:
         await misc.bot.set_webhook(WEBHOOK_URL)
 
-    misc.update_service.run_in_background()
-    # db_conn = await aiopg.create_pool(dsn=DSN)
-    # dispatcher['db_pool'] = db_conn
-    #
-    # await aiogram_metrics.register(METRICS_DSN, METRICS_TABLE_NAME)
+    misc.watcher_manager.run_in_background()
+    await misc.bot.set_my_commands(default_commands)
 
 
 async def on_shutdown(_):
     logger.info('SHUTTING DOWN...')
+    await misc.watcher_manager.close()
     await aiogram_metrics.close()

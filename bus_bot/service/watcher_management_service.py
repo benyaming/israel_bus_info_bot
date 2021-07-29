@@ -10,17 +10,27 @@ from pydantic import BaseModel
 import betterlogging as logging
 
 from bus_bot.config import TTL, PERIOD, THROTTLE_QUANTITY, THROTTLE_PERIOD
-from bus_bot.core.bus_api_v3.client import prepare_station_schedule
+from bus_bot.clients.bus_api import prepare_station_schedule
 from bus_bot.helpers import get_cancel_button
 
 UPDATES_COUNT = TTL // PERIOD
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.TRACE)
+logger.setLevel(logging.DEBUG)
 
 
-class Watcher(BaseModel):
+class BaseWatcher(BaseModel):
+    user_id: int
+    message_id: int
+    updates_count = UPDATES_COUNT
+    updated_at: float = 1
+
+    def run_update(self, is_last_update: bool = False):
+        raise NotImplemented
+
+
+class Watcher(BaseWatcher):
     user_id: int
     station_code: int
     message_id: int
@@ -40,21 +50,21 @@ class Watcher(BaseModel):
 
 
 class WatcherRepository:
-    __storage: dict[int, Watcher] = {}
+    __storage: dict[int, BaseWatcher] = {}
 
-    async def save_watcher(self, watcher: Watcher):
+    async def save_watcher(self, watcher: BaseWatcher):
         self.__storage[watcher.message_id] = watcher
 
     async def get_watcher(self, message_id: int) -> Optional[Watcher]:
         return self.__storage.get(message_id)
 
-    async def find_watchers_by_user_id(self, user_id: int) -> list[Watcher]:
+    async def find_watchers_by_user_id(self, user_id: int) -> list[BaseWatcher]:
         return list(filter(lambda w: w.user_id == user_id, self.__storage.values()))
 
     async def delete_watcher(self, message_id: int):
         del self.__storage[message_id]
 
-    async def get_situable_watcher(self) -> Optional[Watcher]:
+    async def get_situable_watcher(self) -> Optional[BaseWatcher]:
         if len(self.__storage) == 0:
             return None
 
@@ -86,7 +96,7 @@ class Limiter:
 limiter = Limiter(THROTTLE_QUANTITY, THROTTLE_PERIOD)
 
 
-class Worker:
+class WatcherManager:
     watcher_repository = WatcherRepository()
     period: int = PERIOD
 
@@ -94,7 +104,7 @@ class Worker:
 
     __to_delete: set[int] = set()
 
-    async def _process_watcher(self, watcher: Watcher):
+    async def _process_watcher(self, watcher: BaseWatcher):
         if watcher.updated_at == 0:
             await watcher.run_update(is_last_update=True)
             await self.watcher_repository.delete_watcher(watcher.message_id)
@@ -143,7 +153,7 @@ class Worker:
     def run_in_background(self):
         self.__worker = asyncio.create_task(self._run_worker())
 
-    async def stop(self):
+    async def close(self):
         self.__worker.cancel()
         with suppress(asyncio.CancelledError):
             await self.__worker
@@ -159,9 +169,3 @@ class Worker:
 
     def remove_watch(self, message_id: int):
         self.__to_delete.add(message_id)
-
-        # watcher = await self.watcher_repository.get_watcher(message_id)
-        # if not watcher:
-        #     raise ValueError('No watcher found')
-        # watcher.updated_at = 0
-        # await self.watcher_repository.save_watcher(watcher)

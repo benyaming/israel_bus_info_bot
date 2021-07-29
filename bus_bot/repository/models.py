@@ -1,11 +1,19 @@
 from abc import ABC
-from typing import List
+from datetime import datetime as dt
+from typing import Optional
 
-from odmantic import Model, Field
+from odmantic import Model, Field, EmbeddedModel
+
+
+class PersonalDetails(EmbeddedModel, ABC):
+    first_name: str
+    last_name: Optional[str] = None
+    username: Optional[str] = None
+    locale: Optional[str] = None
 
 
 class User(Model, ABC):
     id: int = Field(..., primary_field=True)
-    saved_stops: List[int]
-    board_set: List[int]
     language: str = 'en'
+    last_seen: dt
+    personal_details: PersonalDetails
