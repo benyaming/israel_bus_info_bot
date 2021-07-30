@@ -11,7 +11,8 @@ import betterlogging as logging
 
 from bus_bot.config import TTL, PERIOD, THROTTLE_QUANTITY, THROTTLE_PERIOD
 from bus_bot.clients.bus_api import prepare_station_schedule
-from bus_bot.helpers import get_cancel_button
+from bus_bot.keyboards import get_kb_for_stop
+from bus_bot.repository import user_repository
 
 UPDATES_COUNT = TTL // PERIOD
 
@@ -32,16 +33,19 @@ class BaseWatcher(BaseModel):
 
 class Watcher(BaseWatcher):
     user_id: int
-    station_code: int
+    stop_code: int
     message_id: int
     updates_count = UPDATES_COUNT
     updated_at: float = 1
 
     async def run_update(self, is_last_update: bool = False):
         logger.trace(f'Updating watcher: {self.user_id=}, {self.message_id=}')
-        content = await prepare_station_schedule(self.station_code, is_last_update)
+        content = await prepare_station_schedule(self.stop_code, is_last_update)
+        user = await user_repository.get_user(self.user_id)
         bot = Bot.get_current()
-        kb = get_cancel_button(self.station_code) if not is_last_update else None
+
+        is_stop_saved = user.is_stop_already_saved(self.stop_code)
+        kb = get_kb_for_stop(self.stop_code, is_saved=is_stop_saved) if not is_last_update else None
 
         try:
             await bot.edit_message_text(content, self.user_id, self.message_id, reply_markup=kb)
@@ -158,13 +162,13 @@ class WatcherManager:
         with suppress(asyncio.CancelledError):
             await self.__worker
 
-    async def add_watch(self, user_id: int, station_code: int, message_id: int):
+    async def add_watch(self, user_id: int, stop_code: int, message_id: int):
         active_watchers = await self.watcher_repository.find_watchers_by_user_id(user_id)
         for watcher in active_watchers:
             self.remove_watch(watcher.message_id)
 
         now = dt.now().timestamp()
-        watcher = Watcher(user_id=user_id, station_code=station_code, message_id=message_id, updated_at=now)
+        watcher = Watcher(user_id=user_id, stop_code=stop_code, message_id=message_id, updated_at=now)
         await self.watcher_repository.save_watcher(watcher)
 
     def remove_watch(self, message_id: int):

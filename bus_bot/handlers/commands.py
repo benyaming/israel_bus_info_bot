@@ -18,5 +18,6 @@ async def on_help_command(message: Message):
 
 default_commands = [
     BotCommand('start', 'Start'),
-    BotCommand('help', 'Help')
+    BotCommand('help', 'Help'),
+    BotCommand('my_stops', 'My saved stops')
 ]

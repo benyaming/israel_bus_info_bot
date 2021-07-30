@@ -4,7 +4,7 @@ import sentry_sdk
 from aiogram.types import Message, User
 
 from bus_bot import texts
-from bus_bot.clients.bus_api.exceptions import BotException
+from bus_bot.clients.bus_api.exceptions import BotError
 from bus_bot.misc import bot
 
 
@@ -34,7 +34,7 @@ async def on_err_api_not_responding(*_):
 
 
 async def on_err_unknown_exception(_, e: Exception):
-    if isinstance(e, BotException):
+    if isinstance(e, BotError):
         return True
 
     await bot.send_message(User.get_current().id, texts.unknown_exception)

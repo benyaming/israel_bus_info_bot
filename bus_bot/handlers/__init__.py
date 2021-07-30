@@ -1,7 +1,7 @@
 from aiogram.types import ContentTypes, ContentType
 from aiogram.utils.exceptions import MessageNotModified
 
-from bus_bot.clients.bus_api.exceptions import StationNonExistsException, ApiNotRespondingException, NoStopsException
+from bus_bot.clients.bus_api.exceptions import StationNonExistsError, ApiNotRespondingError, NoStopsError
 from bus_bot.helpers import CallbackPrefix
 from bus_bot.misc import dp
 
@@ -17,9 +17,9 @@ __all__ = ['register_handlers']
 def register_handlers():
     # errors
     dp.register_errors_handler(errors.on_err_not_modified, exception=MessageNotModified)
-    dp.register_errors_handler(errors.on_err_station_not_exists, exception=StationNonExistsException)
-    dp.register_errors_handler(errors.on_err_api_not_responding, exception=ApiNotRespondingException)
-    dp.register_errors_handler(errors.on_err_not_stations_found, exception=NoStopsException)
+    dp.register_errors_handler(errors.on_err_station_not_exists, exception=StationNonExistsError)
+    dp.register_errors_handler(errors.on_err_api_not_responding, exception=ApiNotRespondingError)
+    dp.register_errors_handler(errors.on_err_not_stations_found, exception=NoStopsError)
     dp.register_errors_handler(errors.on_err_unknown_exception, exception=Exception)  # Should be last in this list!
 
     # commands

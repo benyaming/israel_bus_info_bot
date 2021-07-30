@@ -2,9 +2,10 @@ import logging
 from typing import List
 
 from aiogram import Bot
+from aiohttp import ContentTypeError
 from pydantic import parse_obj_as
 
-from bus_bot.clients.bus_api.exceptions import exception_by_codes, ApiNotRespondingException
+from bus_bot.clients.bus_api.exceptions import exception_by_codes, ApiNotRespondingError
 from bus_bot.clients.bus_api.models import IncomingRoutesResponse, Stop
 from bus_bot.config import API_URL
 
@@ -24,9 +25,14 @@ async def _get_lines_for_station(station_id: int) -> IncomingRoutesResponse:
     async with Bot.get_current().session.get(url) as resp:
         if resp.status > 400:
             logging.error((await resp.read()).decode('utf-8'))
-            body = await resp.json()
+            try:
+                body = await resp.json()
+            except ContentTypeError:
+                print(await resp.read())
+                raise
+
             code = body.get('detail', {}).get('code', 3)
-            exc = exception_by_codes.get(code, ApiNotRespondingException)
+            exc = exception_by_codes.get(code, ApiNotRespondingError)
 
             logger.error(body)
             raise exc()

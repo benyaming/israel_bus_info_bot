@@ -1,0 +1,6 @@
+class BotError(Exception):
+    ...
+
+
+class StopAlreadySaved(BotError):
+    ...
