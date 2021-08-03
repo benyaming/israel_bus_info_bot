@@ -9,12 +9,12 @@ from aiogram.utils.exceptions import MessageNotModified
 from pydantic import BaseModel
 import betterlogging as logging
 
-from bus_bot.config import TTL, PERIOD, THROTTLE_QUANTITY, THROTTLE_PERIOD
+from bus_bot.config import env
 from bus_bot.clients.bus_api import prepare_station_schedule
 from bus_bot.keyboards import get_kb_for_stop
 from bus_bot.repository import user_repository
 
-UPDATES_COUNT = TTL // PERIOD
+UPDATES_COUNT = env.TTL // env.PERIOD
 
 
 logger = logging.getLogger(__name__)
@@ -73,7 +73,7 @@ class WatcherRepository:
             return None
 
         oldest_watcher = min(self.__storage.values(), key=lambda w: w.updated_at)
-        if dt.now().timestamp() - oldest_watcher.updated_at >= PERIOD:
+        if dt.now().timestamp() - oldest_watcher.updated_at >= env.PERIOD:
             return oldest_watcher
 
 
@@ -97,12 +97,12 @@ class Limiter:
         self.__values.append(monotonic())
 
 
-limiter = Limiter(THROTTLE_QUANTITY, THROTTLE_PERIOD)
+limiter = Limiter(env.THROTTLE_QUANTITY, env.THROTTLE_PERIOD)
 
 
 class WatcherManager:
     watcher_repository = WatcherRepository()
-    period: int = PERIOD
+    period: int = env.PERIOD
 
     __worker: asyncio.Task
 

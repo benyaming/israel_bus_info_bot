@@ -1,7 +1,7 @@
 import logging
 
 import sentry_sdk
-from aiogram.types import Message, User
+from aiogram.types import Message, User, CallbackQuery
 
 from bus_bot import texts
 from bus_bot.clients.bus_api.exceptions import BotError
@@ -30,6 +30,12 @@ async def on_err_not_stations_found(*_):
 async def on_err_api_not_responding(*_):
     msg = Message.get_current()
     await msg.reply(texts.api_not_responding)
+    return True
+
+
+async def on_err_stop_already_saved(*_):
+    call = CallbackQuery.get_current()
+    await call.answer(texts.stop_already_saved)
     return True
 
 

@@ -1,19 +1,24 @@
 import logging
 
 import aiogram_metrics
+from aiogram.dispatcher import FSMContext
 from aiogram.types import Message, CallbackQuery
 
 from bus_bot import texts
 from bus_bot.clients.bus_api import prepare_station_schedule
+from bus_bot.clients.bus_api.client import get_stop_info
 from bus_bot.clients.map_generator import get_map_with_points
-from bus_bot.helpers import CallbackPrefix
-from bus_bot.keyboards import get_kb_for_stop
+from bus_bot.exceptions import StopAlreadySaved
+from bus_bot.helpers import CallbackPrefix, chat_action
+from bus_bot.keyboards import get_kb_for_stop, get_done_button_with_placeholder
 from bus_bot.misc import bot, dp
 from bus_bot.repository import user_repository
+from bus_bot.states import RenameStopState
 
 logger = logging.getLogger('bot')
 
 
+@chat_action
 async def on_stop_code(msg: Message):
     stop_code = int(msg.text)
     user = await user_repository.get_user(msg.from_user.id)
@@ -36,19 +41,56 @@ async def on_terminate_call(call: CallbackQuery):
 
 
 @aiogram_metrics.track('Location sent')
+@chat_action('image')
 async def on_location(msg: Message):
     resp, kb = await get_map_with_points(msg.location.latitude, msg.location.longitude)
     await msg.reply_photo(resp, reply_markup=kb)
 
 
-@aiogram_metrics.track('Stop from map selected')
+@chat_action
 async def on_stop_call(call: CallbackQuery):
-    await call.answer()
-    stop_code = int(call.data.split(CallbackPrefix.get_stop)[1])
+    prefix, raw_stop_code = call.data.split('_', maxsplit=1)
+    stop_code = int(raw_stop_code)
+
+    if prefix == CallbackPrefix.get_stop[:-1]:
+        aiogram_metrics.manual_track('Stop from map selected')
+    elif prefix == CallbackPrefix.get_saved_stop[:-1]:
+        aiogram_metrics.manual_track('Stop from saved stops selected')
+
     user = await user_repository.get_user(call.from_user.id)
 
     content = await prepare_station_schedule(stop_code)
     kb = get_kb_for_stop(stop_code, is_saved=user.is_stop_already_saved(stop_code))
     sent = await bot.send_message(call.from_user.id, content, reply_markup=kb)
+    await call.answer()
 
     await dp['watcher_manager'].add_watch(call.from_user.id, stop_code, sent.message_id)
+
+
+@aiogram_metrics.track('Save stop')
+async def on_save_stop(call: CallbackQuery, state: FSMContext):
+    stop_code = int(call.data.split(CallbackPrefix.save_stop)[1])
+
+    user = await user_repository.get_user(call.from_user.id)
+    if user.is_stop_already_saved(stop_code):
+        raise StopAlreadySaved()
+
+    stop_details = await get_stop_info(stop_code)
+
+    data = {'stop_rename': {'code': stop_code, 'name': stop_details.name, 'origin': call.message.message_id}}
+    await state.set_data(data)
+
+    kb = get_done_button_with_placeholder(stop_details.name)
+    await bot.send_message(call.from_user.id, texts.rename_saved_stop, reply_markup=kb)
+    await call.answer()
+    await RenameStopState.waiting_for_stop_name.set()
+
+
+@aiogram_metrics.track('Delete stop')
+async def on_remove_stop(call: CallbackQuery):
+    stop_code = int(call.data.split(CallbackPrefix.remove_stop)[1])
+    await user_repository.remove_stop(call.from_user.id, stop_code)
+    kb = get_kb_for_stop(stop_code, False)
+    await bot.edit_message_reply_markup(call.from_user.id, call.message.message_id, reply_markup=kb)
+    await call.answer(texts.stop_deleted_ok_alert)
+

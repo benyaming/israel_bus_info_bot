@@ -44,11 +44,12 @@ async def get_user_saved_stops(user_id: int) -> list[SavedStop]:
 async def save_stop(user_id: int, stop_code: int, stop_name: str) -> list[SavedStop]:
     user = await get_user(user_id)
     stop = SavedStop(name=stop_name, code=stop_code)
-    if stop in user.saved_stops:
+    if user.is_stop_already_saved(stop_code):
         raise StopAlreadySaved()
 
     user.saved_stops.append(stop)
-    await db_engine.save(stop)
+
+    await db_engine.save(user)
     return user.saved_stops
 
 
@@ -65,7 +66,7 @@ async def rename_stop(user_id: int, stop_code: int, new_name: str) -> list[Saved
     return user.saved_stops
 
 
-async def delete_stop(user_id: int, stop_code: int) -> list[SavedStop]:
+async def remove_stop(user_id: int, stop_code: int) -> list[SavedStop]:
     user = await get_user(user_id)
     stop = list(filter(lambda s: s.code == stop_code, user.saved_stops))
     if not stop:

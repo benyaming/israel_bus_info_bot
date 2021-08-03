@@ -6,7 +6,7 @@ from urllib.parse import quote
 
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-from bus_bot.config import MAPBOX_TOKEN
+from bus_bot.config import env
 from bus_bot.clients.bus_api.client import find_near_stops
 from bus_bot.clients.bus_api.exceptions import NoStopsError
 from bus_bot.clients.bus_api.models import Stop
@@ -67,7 +67,7 @@ async def get_map_with_points(lat: float, lng: float) -> Tuple[BytesIO, InlineKe
         raise NoStopsError
 
     params = {
-        'access_token': MAPBOX_TOKEN
+        'access_token': env.MAPBOX_TOKEN
     }
 
     geojson_query = _get_encoded_geojson_from_stops(stops)
