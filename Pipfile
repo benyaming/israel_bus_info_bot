@@ -8,7 +8,7 @@ aiogram = "*"
 aiopg = "*"
 aiogram-metrics = "*"
 betterlogging = "*"
-pydantic = "*"
+pydantic = {extras = ["dotenv"],version = '*'}
 sentry-sdk = "==1.2.0"
 odmantic = "*"
 motor = "*"

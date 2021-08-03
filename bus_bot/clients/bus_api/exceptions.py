@@ -1,20 +1,19 @@
-class BotException(Exception):
+from bus_bot.exceptions import BotError
+
+
+class StationNonExistsError(BotError):
     ...
 
 
-class StationNonExistsException(BotException):
+class ApiNotRespondingError(BotError):
     ...
 
 
-class ApiNotRespondingException(BotException):
-    ...
-
-
-class NoStopsException(BotException):
+class NoStopsError(BotError):
     ...
 
 
 exception_by_codes = {
-    1: StationNonExistsException,
-    3: ApiNotRespondingException
+    1: StationNonExistsError,
+    3: ApiNotRespondingError
 }
