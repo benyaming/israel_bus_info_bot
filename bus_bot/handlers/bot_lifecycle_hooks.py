@@ -25,5 +25,5 @@ async def on_start(dp: Dispatcher):
 
 async def on_shutdown(dp: Dispatcher):
     logger.info('SHUTTING DOWN...')
-    await dp['watcher_manager'].watcher_manager.close()
+    await dp['watcher_manager'].close()
     await aiogram_metrics.close()
