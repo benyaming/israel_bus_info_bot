@@ -12,6 +12,7 @@ pydantic = {extras = ["dotenv"],version = '*'}
 sentry-sdk = "==1.2.0"
 odmantic = "*"
 motor = "*"
+httpx = "*"
 
 [dev-packages]
 

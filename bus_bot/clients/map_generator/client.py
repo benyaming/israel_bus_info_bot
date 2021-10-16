@@ -16,7 +16,7 @@ from bus_bot.helpers import CallbackPrefix
 
 __all__ = ['get_map_with_points']
 
-logger = logging.getLogger('map_generator')
+logger = logging.getLogger('map_generator_client')
 
 MAP_ZOOM = 15.5
 STILE_ID = 'mapbox/streets-v11'
@@ -75,14 +75,19 @@ async def get_map_with_points(lat: float, lng: float) -> Tuple[BytesIO, InlineKe
     # map_query = f'{lng},{lat},{MAP_ZOOM},0,0'
     url = f'https://api.mapbox.com/styles/v1/{STILE_ID}/static/geojson({geojson_query})/{map_query}/{IMG_SIZE}'
 
-    async with session.get(url, params=params) as resp:
-        if resp.headers.get('Content-Type') != 'image/png':
-            logger.exception(await resp.read())
-            raise ValueError('Failed to generate map!')
+    try:
+        resp = await session.get(url, params=params)
+    except Exception as e:
+        logger.error(f'{e}: failed to open api url!')
+        raise ValueError('Failed to generate map!')
 
-        io = BytesIO()
-        io.write(await resp.read())
-        io.seek(0)
+    if resp.headers.get('Content-Type') != 'image/png':
+        logger.exception(await resp.read())
+        raise ValueError('Failed to generate map!')
+
+    io = BytesIO()
+    io.write(resp.read())
+    io.seek(0)
 
     kb = _get_kb_for_stops(stops)
     return io, kb
