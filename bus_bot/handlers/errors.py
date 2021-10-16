@@ -33,6 +33,10 @@ async def on_err_api_not_responding(*_):
     return True
 
 
+async def on_err_api_timeout(*_):
+    return True
+
+
 async def on_err_stop_already_saved(*_):
     call = CallbackQuery.get_current()
     await call.answer(texts.stop_already_saved)
