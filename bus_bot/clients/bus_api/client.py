@@ -5,14 +5,14 @@ from aiogram import Bot
 from aiohttp import ContentTypeError
 from pydantic import parse_obj_as
 
-from bus_bot.clients.bus_api.exceptions import exception_by_codes, ApiNotRespondingError
+from bus_bot.clients.bus_api.exceptions import exception_by_codes, ApiNotRespondingError, ApiTimeoutError
 from bus_bot.clients.bus_api.models import IncomingRoutesResponse, Stop, IncomingRoute
 from bus_bot.config import env
 
 
 __all__ = ['find_near_stops', 'prepare_station_schedule', 'get_stop_info']
 
-logger = logging.getLogger('bus_api')
+logger = logging.getLogger('bus_api_client')
 
 TRANSPORT_ICONS = {
     '2': '🚄',
@@ -45,9 +45,9 @@ async def _get_lines_for_station(station_id: int) -> IncomingRoutesResponse:
             logging.error((await resp.read()).decode('utf-8'))
             try:
                 body = await resp.json()
-            except ContentTypeError:
-                print(await resp.read())
-                raise
+            except Exception as e:
+                logger.error(f'{e}: {await resp.read()}')
+                raise ApiTimeoutError
 
             code = body.get('detail', {}).get('code', 3)
             exc = exception_by_codes.get(code, ApiNotRespondingError)

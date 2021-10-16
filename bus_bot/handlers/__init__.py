@@ -26,6 +26,7 @@ def register_handlers():
     dp.register_errors_handler(errors.on_err_not_modified, exception=MessageNotModified)
     dp.register_errors_handler(errors.on_err_station_not_exists, exception=StationNonExistsError)
     dp.register_errors_handler(errors.on_err_api_not_responding, exception=ApiNotRespondingError)
+    dp.register_errors_handler(errors.on_err_api_timeout, exception=ApiNotRespondingError)
     dp.register_errors_handler(errors.on_err_not_stations_found, exception=NoStopsError)
     dp.register_errors_handler(errors.on_err_stop_already_saved, exception=StopAlreadySaved)
     dp.register_errors_handler(errors.on_err_unknown_exception, exception=Exception)  # Should be last in this list!

@@ -13,6 +13,10 @@ class NoStopsError(BotError):
     ...
 
 
+class ApiTimeoutError(BotError):
+    ...
+
+
 exception_by_codes = {
     1: StationNonExistsError,
     3: ApiNotRespondingError
