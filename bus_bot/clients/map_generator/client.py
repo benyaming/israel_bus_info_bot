@@ -82,7 +82,7 @@ async def get_map_with_points(lat: float, lng: float) -> Tuple[BytesIO, InlineKe
         raise ValueError('Failed to generate map!')
 
     if resp.headers.get('Content-Type') != 'image/png':
-        logger.exception(await resp.read())
+        logger.exception(resp.read())
         raise ValueError('Failed to generate map!')
 
     io = BytesIO()

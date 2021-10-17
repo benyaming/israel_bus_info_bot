@@ -49,11 +49,10 @@ async def _get_lines_for_station(station_id: int) -> IncomingRoutesResponse:
         raise ApiNotRespondingError()
 
     if 500 > resp.status_code > 400:
-        logging.error((await resp.read()).decode('utf-8'))
+        logging.error((resp.read()).decode('utf-8'))
         try:
             body = resp.json()
         except Exception as e:
-            logger.error(f'{e}: {await resp.read()}')
             raise ApiTimeoutError
         resp.raise_for_status()
 
