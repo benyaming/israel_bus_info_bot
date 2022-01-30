@@ -48,7 +48,7 @@ async def _get_lines_for_station(station_id: int) -> IncomingRoutesResponse:
         logger.error(f'{e}: failed to open api url [{url}]!')
         raise ApiNotRespondingError()
 
-    if 500 > resp.status_code > 400:
+    if resp.status_code > 400:
         logging.error((resp.read()).decode('utf-8'))
         try:
             body = resp.json()
@@ -77,7 +77,7 @@ async def find_near_stops(lat: float, lng: float) -> List[Stop]:
         logger.error(f'{e}: failed to open api url [{url}]!')
         raise ApiNotRespondingError()
 
-    if 500 > resp.status_code > 400:
+    if resp.status_code > 400:
         body = resp.json()
         code = body.get('detail', {}).get('code', 3)
         exc = exception_by_codes.get(code, 3)
@@ -120,7 +120,7 @@ async def get_stop_info(stop_code: int) -> Stop:
         logger.error(f'{e}: failed to open api url [{url}]!')
         raise ApiNotRespondingError()
 
-    if 500 > resp.status_code > 400:
+    if resp.status_code > 400:
         body = resp.json()
         code = body.get('detail', {}).get('code', 3)
         exc = exception_by_codes.get(code, 3)
