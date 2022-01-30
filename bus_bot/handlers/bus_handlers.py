@@ -1,6 +1,8 @@
 import logging
 
+import aiogram.utils.exceptions
 import aiogram_metrics
+import aiohttp
 from aiogram.dispatcher import FSMContext
 from aiogram.types import Message, CallbackQuery
 
@@ -14,6 +16,7 @@ from bus_bot.keyboards import get_kb_for_stop, get_done_button_with_placeholder
 from bus_bot.misc import bot, dp
 from bus_bot.repository import user_repository
 from bus_bot.states import RenameStopState
+from bus_bot.config import env
 
 logger = logging.getLogger('bot')
 
@@ -23,9 +26,9 @@ async def on_stop_code(msg: Message):
     stop_code = int(msg.text)
     user = await user_repository.get_user(msg.from_user.id)
 
-    content = await prepare_station_schedule(stop_code)
+    content, kb = await prepare_station_schedule(stop_code)
 
-    kb = get_kb_for_stop(msg.text, is_saved=user.is_stop_already_saved(stop_code))
+    # kb = get_kb_for_stop(msg.text, is_saved=user.is_stop_already_saved(stop_code))
     sent = await msg.reply(content, reply_markup=kb)
     aiogram_metrics.manual_track('Init station schedule')
 
@@ -59,13 +62,33 @@ async def on_stop_call(call: CallbackQuery):
 
     user = await user_repository.get_user(call.from_user.id)
 
-    content = await prepare_station_schedule(stop_code)
-    kb = get_kb_for_stop(stop_code, is_saved=user.is_stop_already_saved(stop_code))
+    content, kb = await prepare_station_schedule(stop_code)
+    # kb = get_kb_for_stop(stop_code, is_saved=user.is_stop_already_saved(stop_code))
     sent = await bot.send_message(call.from_user.id, content, reply_markup=kb)
     await call.answer()
 
     await dp['watcher_manager'].add_watch(call.from_user.id, stop_code, sent.message_id)
 
+
+async def on_track_call(call: CallbackQuery):
+    await call.answer()
+    stop_code, plate_number = call.data.split(CallbackPrefix.track_route)[1].split(':')
+
+    loc_msg = None
+    async with bot.session.ws_connect(f'{env.API_URL}/track_vehicle/{stop_code}/{plate_number}') as ws:
+        async for msg in ws:
+            if msg.type == aiohttp.WSMsgType.TEXT:
+                data = msg.json()
+                print(data)
+                lat = data['latitude']
+                lng = data['longitude']
+                if loc_msg is None:
+                    loc_msg = await bot.send_location(call.from_user.id, lat, lng, live_period=1800)
+                else:
+                    try:
+                        await bot.edit_message_live_location(lat, lng, call.from_user.id, loc_msg.message_id)
+                    except aiogram.utils.exceptions.MessageNotModified:
+                        continue
 
 @aiogram_metrics.track('Save stop')
 async def on_save_stop(call: CallbackQuery, state: FSMContext):

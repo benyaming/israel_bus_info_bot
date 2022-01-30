@@ -1,10 +1,12 @@
 import logging
-from typing import List
+from typing import List, Tuple
 
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from pydantic import parse_obj_as
 
 from bus_bot.clients.bus_api.exceptions import exception_by_codes, ApiNotRespondingError, ApiTimeoutError
 from bus_bot.clients.bus_api.models import IncomingRoutesResponse, Stop, IncomingRoute
+from bus_bot.helpers import CallbackPrefix
 from bus_bot.misc import session
 from bus_bot.config import env
 
@@ -94,7 +96,7 @@ async def find_near_stops(lat: float, lng: float) -> List[Stop]:
     return list(unique_stops.values())
 
 
-async def prepare_station_schedule(station_id: int, is_last_update: bool = False) -> str:
+async def prepare_station_schedule(station_id: int, is_last_update: bool = False) -> Tuple[str, InlineKeyboardMarkup]:
     arriving_lines = await _get_lines_for_station(station_id)
     response_lines = [f'<b>{arriving_lines.stop_info.name} ({arriving_lines.stop_info.code})</b>\n']
 
@@ -108,7 +110,14 @@ async def prepare_station_schedule(station_id: int, is_last_update: bool = False
     response_lines.append(status)
 
     response = '\n'.join(response_lines)
-    return response
+
+    kb = InlineKeyboardMarkup()
+    for route in arriving_lines.incoming_routes:
+        kb.row(InlineKeyboardButton(
+            text=f'Track bus #{route.route.short_name} arriving in {route.eta}',
+            callback_data=f'{CallbackPrefix.track_route}{station_id}:{route.plate_number}'
+        ))
+    return response, kb
 
 
 async def get_stop_info(stop_code: int) -> Stop:

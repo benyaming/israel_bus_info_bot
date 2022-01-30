@@ -42,6 +42,7 @@ class Route(BaseModel):
 
 class IncomingRoute(BaseModel):
     eta: int
+    plate_number: str
     route: 'Route'
 
 

@@ -48,12 +48,10 @@ def register_handlers():
 
     # callbacks
     dp.register_callback_query_handler(bus_handlers.on_terminate_call, text_startswith=CallbackPrefix.terminate_stop_updating)
-    dp.register_callback_query_handler(
-        bus_handlers.on_stop_call,
-        text_startswith=[CallbackPrefix.get_stop, CallbackPrefix.get_saved_stop]
-    )
+    dp.register_callback_query_handler(bus_handlers.on_stop_call,text_startswith=[CallbackPrefix.get_stop, CallbackPrefix.get_saved_stop])
     dp.register_callback_query_handler(bus_handlers.on_save_stop, text_startswith=CallbackPrefix.save_stop)
     dp.register_callback_query_handler(bus_handlers.on_remove_stop, text_startswith=CallbackPrefix.remove_stop)
+    dp.register_callback_query_handler(bus_handlers.on_track_call, text_startswith=CallbackPrefix.track_route)
 
     # forms
     dp.register_message_handler(forms.on_stop_rename, state=RenameStopState.waiting_for_stop_name)

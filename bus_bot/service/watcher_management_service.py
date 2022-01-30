@@ -40,12 +40,12 @@ class Watcher(BaseWatcher):
 
     async def run_update(self, is_last_update: bool = False):
         logger.trace(f'Updating watcher: {self.user_id=}, {self.message_id=}')
-        content = await prepare_station_schedule(self.stop_code, is_last_update)
+        content, kb = await prepare_station_schedule(self.stop_code, is_last_update)
         user = await user_repository.get_user(self.user_id)
         bot = Bot.get_current()
 
         is_stop_saved = user.is_stop_already_saved(self.stop_code)
-        kb = get_kb_for_stop(self.stop_code, is_saved=is_stop_saved) if not is_last_update else None
+        # kb = get_kb_for_stop(self.stop_code, is_saved=is_stop_saved) if not is_last_update else None
 
         try:
             await bot.edit_message_text(content, self.user_id, self.message_id, reply_markup=kb)

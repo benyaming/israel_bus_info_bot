@@ -10,6 +10,7 @@ class CallbackPrefix:
     get_saved_stop = 'e_'
     save_stop = 'r_'
     remove_stop = 't_'
+    track_route = 'tr_'
 
 
 # Warning: it is not working when using injected FSMContext state!
