@@ -4,7 +4,8 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-aiogram = "*"
+aiogram = "==2.15"
+aiohttp = "==3.7.3"
 aiopg = "*"
 aiogram-metrics = "*"
 betterlogging = "*"
