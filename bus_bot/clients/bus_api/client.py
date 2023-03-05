@@ -26,7 +26,7 @@ def _format_lines(routes: list[IncomingRoute]) -> list[str]:
         eta = f'{route.eta} min' if route.eta != 0 else 'now'
 
         # some black RTL/LTR magic
-        transport_icon = TRANSPORT_ICONS[route.route.type]
+        transport_icon = TRANSPORT_ICONS.get(route.route.type, '❔')
         time_icon = '🔥' if route.eta == 0 else '🕓'
 
         if 'א' in route.route.short_name:
