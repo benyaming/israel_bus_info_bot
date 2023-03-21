@@ -10,7 +10,7 @@ aiopg = "*"
 aiogram-metrics = "*"
 betterlogging = "*"
 pydantic = {extras = ["dotenv"],version = '*'}
-sentry-sdk = "==1.2.0"
+sentry-sdk = "==1.14.0"
 odmantic = "*"
 motor = "*"
 httpx = "*"
