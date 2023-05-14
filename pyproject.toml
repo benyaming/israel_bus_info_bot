@@ -9,7 +9,7 @@ authors = [
 dependencies = [
     "aiogram==2.25.1",
     "psycopg==3.1.9",
-    "aiogram-metrics==1.0.0",
+    "aiogram-metrics==1.0.1",
     "betterlogging==0.2.1",
     "pydantic[dotenv]==1.10.7",
     "sentry-sdk==1.22.2",

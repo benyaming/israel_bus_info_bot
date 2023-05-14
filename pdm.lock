@@ -15,12 +15,12 @@ dependencies = [
 
 [[package]]
 name = "aiogram-metrics"
-version = "1.0.0"
+version = "1.0.1"
 requires_python = ">=3.7"
 summary = "Message metrics exporter for aiogram framework"
 dependencies = [
     "aiogram",
-    "psycopg",
+    "psycopg[binary]",
 ]
 
 [[package]]
@@ -186,6 +186,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "psycopg"
+version = "3.1.9"
+requires_python = ">=3.7"
+summary = "PostgreSQL database adapter for Python"
+dependencies = [
+    "typing-extensions>=4.1",
+    "tzdata; sys_platform == \"win32\"",
+]
+
+[[package]]
 name = "pydantic"
 version = "1.10.7"
 requires_python = ">=3.7"
@@ -279,16 +289,16 @@ dependencies = [
 lock_version = "4.2"
 cross_platform = true
 groups = ["default", "dev"]
-content_hash = "sha256:3dd61c15a4e924af6050859a20b50bbe32b9e2a5595b3ac2d1ee34abc760db49"
+content_hash = "sha256:370a9c8b83983582961bc99b6c6fe09f080f474f76284334211465b63f60eeab"
 
 [metadata.files]
 "aiogram 2.25.1" = [
     {url = "https://files.pythonhosted.org/packages/c1/68/1c41d0245849af98250058dd1f702c56025c9fb4e19fe07158283852bbc0/aiogram-2.25.1-py3-none-any.whl", hash = "sha256:7bb770cd0459f1dbaea00578bf13fb2e6a1812f22adf94a988c11a7c0d5f33e1"},
     {url = "https://files.pythonhosted.org/packages/c1/6b/adbb9409f7af5deaeb461e76a553ae1640f86dd60ae3ca5939abb03dd844/aiogram-2.25.1.tar.gz", hash = "sha256:59ad78fc0ebbef1fd471c15778a4594b60117e0d7373bc2ce7bcd192074d527d"},
 ]
-"aiogram-metrics 1.0.0" = [
-    {url = "https://files.pythonhosted.org/packages/a3/4a/00054ada08bd08e63b7fd96636dee4b16ea54fe3ffb04eddc0f7c997c3ff/aiogram_metrics-1.0.0.tar.gz", hash = "sha256:b6daeb1bd974892b500f20cca9c5ea3f7d6454235e2254841945c03299e92f14"},
-    {url = "https://files.pythonhosted.org/packages/c8/b8/89c35fdd7e60161ff29f044fea8254673722f97ae1817bc97fe0666a3126/aiogram_metrics-1.0.0-py3-none-any.whl", hash = "sha256:2c528358db7a7edaaf99984616132b7ba7bac8bc877ac2d238be653d63f0a2aa"},
+"aiogram-metrics 1.0.1" = [
+    {url = "https://files.pythonhosted.org/packages/8e/0e/7048f91c64b8874a7603518d3972df17f8558c23538dc9223a75e2ea8d3b/aiogram_metrics-1.0.1.tar.gz", hash = "sha256:f028772014b2ea719afdf8bcca867b1029f0689152dde6eda3787405c862eb58"},
+    {url = "https://files.pythonhosted.org/packages/9f/fd/d5e6f049869fdf4c60a61d85c113276d411cb108476635cbd7aeeae61e6c/aiogram_metrics-1.0.1-py3-none-any.whl", hash = "sha256:324913110d41489ad7a15960075b5c17dbf7bc09ac4aa5b9b4f129a056a1fd78"},
 ]
 "aiohttp 3.8.4" = [
     {url = "https://files.pythonhosted.org/packages/03/e7/84b65e341b1f45753fea51158d8a9522e57a5ae804acbc6dc34edf07cea0/aiohttp-3.8.4-cp39-cp39-musllinux_1_1_aarch64.whl", hash = "sha256:bca5f24726e2919de94f047739d0a4fc01372801a3672708260546aa2601bf57"},
