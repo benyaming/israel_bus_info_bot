@@ -9,15 +9,14 @@ authors = [
 dependencies = [
     "aiogram==2.25.1",
     "psycopg==3.1.9",
-    "aiogram-metrics==1.0.1",
+    "aiogram-metrics==1.0.2",
     "betterlogging==0.2.1",
     "pydantic[dotenv]==1.10.7",
     "sentry-sdk==1.22.2",
     "odmantic==0.9.2",
     "motor==3.1.2",
     "httpx==0.24.0",
-
-    "setuptools"
+    "setuptools",
 ]
 
 requires-python = ">=3.11"
