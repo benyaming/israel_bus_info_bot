@@ -136,7 +136,7 @@ class WatcherManager:
                 try:
                     w = await self.watcher_repository.get_watcher(message_id)
                     if not w:
-                        logger.warning('Failed to get the worker for deletion!)
+                        logger.warning('Failed to get the worker for deletion!')
                     else:
                         w.updated_at = 0
                         await self.watcher_repository.save_watcher(w)
