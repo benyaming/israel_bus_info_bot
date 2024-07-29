@@ -1,0 +1,37 @@
+[project]
+name = ""
+version = ""
+description = ""
+authors = [
+    {name = "benyamin ginzburg", email = "benyamin+git@ginzburg.io"},
+]
+
+dependencies = [
+    "aiogram==2.25.1",
+    "psycopg==3.1.9",
+    "aiogram-metrics==1.0.2",
+    "betterlogging==0.2.1",
+    "pydantic[dotenv]==1.10.7",
+    "sentry-sdk==1.22.2",
+    "odmantic==0.9.2",
+    "motor==3.1.2",
+    "httpx==0.24.0",
+    "setuptools",
+]
+
+requires-python = ">=3.11"
+license = {text = "MIT"}
+
+[tool.pdm]
+[[tool.pdm.source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[tool.pdm.dev-dependencies]
+dev = [
+]
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"

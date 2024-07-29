@@ -1,11 +1,12 @@
-FROM python:3.9-slim
+FROM python:3.11-slim
 
-RUN pip install pipenv
+RUN pip install pdm
+
 WORKDIR /home/app
 COPY . .
 WORKDIR /home/app/bus_bot
-RUN pipenv install
+RUN pdm install
 ENV PYTHONPATH=/home/app
 ENV DOCKER_MODE=true
 ENV TZ=Asia/Jerusalem
-CMD ["pipenv", "run", "python", "main.py"]
+CMD ["pdm", "run", "python", "main.py"]

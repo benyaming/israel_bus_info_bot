@@ -135,10 +135,13 @@ class WatcherManager:
             for message_id in self.__to_delete.copy():
                 try:
                     w = await self.watcher_repository.get_watcher(message_id)
-                    w.updated_at = 0
-                    await self.watcher_repository.save_watcher(w)
+                    if not w:
+                        logger.warning('Failed to get the worker for deletion!')
+                    else:
+                        w.updated_at = 0
+                        await self.watcher_repository.save_watcher(w)
                 except Exception as e:
-                    logger.exception('Error while processting deletion:', e)
+                    logger.exception('Error while processting deletion!')
                 else:
                     self.__to_delete.remove(message_id)
 
