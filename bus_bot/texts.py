@@ -16,7 +16,7 @@ cancel = 'Canceled.'
 
 
 # Keyboards
-cancel_updating_button = '🛑 Cancel updating'
+cancel_updating_button = '🛑 Stop updating'
 add_to_saved_button = '🔖 Add to saved stops'
 remove_from_saved_button = '❌ Remove'
 done_button = 'Done'

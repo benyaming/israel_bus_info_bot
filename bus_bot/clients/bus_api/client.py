@@ -104,7 +104,7 @@ async def prepare_station_schedule(station_id: int, is_last_update: bool = False
         formatted_lines = ['<code>No incoming routes found for the next 30 minutes...</code>']
 
     response_lines.extend(formatted_lines)
-    status = '<i>\n\nInformation is updating...</i>' if not is_last_update else '<b>\n\nMessage not updating!</b>'
+    status = '<i>\n\nInformation is updating...</i>' if not is_last_update else '<b>\n\nMessage is not updating!</b>'
     response_lines.append(status)
 
     response = '\n'.join(response_lines)

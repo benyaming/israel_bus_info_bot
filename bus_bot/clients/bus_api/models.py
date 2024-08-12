@@ -13,11 +13,18 @@ class IncomingRoutesResponse(BaseModel):
     incoming_routes: List['IncomingRoute']
 
 
+class Agency(BaseModel):
+    id: int
+    name: str
+    url: str
+    phone: str
+
+
 class Stop(BaseModel):
     id: int
     code: int
     name: str
-    city: str
+    city: str | None
     street: Optional[str] = None
     floor: Optional[str] = None
     platform: Optional[str] = None
@@ -29,7 +36,7 @@ class Stop(BaseModel):
 
 class Route(BaseModel):
     id: str
-    agency_id: str
+    agency: Agency
     short_name: str
     from_stop_name: str
     to_stop_name: str
