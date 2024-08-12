@@ -75,7 +75,7 @@ async def on_track_call(call: CallbackQuery):
     stop_code, plate_number = call.data.split(CallbackPrefix.track_route)[1].split(':')
 
     loc_msg = None
-    async with bot.session.ws_connect(f'{env.API_URL}/track_vehicle/{stop_code}/{plate_number}') as ws:
+    async with bot.session.ws_connect(f'{env.API_URL}/siri/track_vehicle/{stop_code}/{plate_number}') as ws:
         async for msg in ws:
             if msg.type == aiohttp.WSMsgType.TEXT:
                 data = msg.json()

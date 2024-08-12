@@ -24,7 +24,7 @@ IMG_SIZE = '500x500'
 
 
 def _get_marker_color(stop: Stop) -> str:
-    if stop.floor == 'תחנת רכבת':
+    if stop.floor == 'תחנת רכבת' or stop.city is None:
         color = '#066ed6'
     else:
         color = 'd60606'

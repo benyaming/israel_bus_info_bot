@@ -17,7 +17,7 @@ class Stop(BaseModel):
     id: int
     code: int
     name: str
-    city: str
+    city: str | None
     street: Optional[str] = None
     floor: Optional[str] = None
     platform: Optional[str] = None
@@ -29,7 +29,7 @@ class Stop(BaseModel):
 
 class Route(BaseModel):
     id: str
-    agency_id: str
+    # agency_id: str
     short_name: str
     from_stop_name: str
     to_stop_name: str
@@ -42,7 +42,7 @@ class Route(BaseModel):
 
 class IncomingRoute(BaseModel):
     eta: int
-    plate_number: str
+    plate_number: str | None
     route: 'Route'
 
 
