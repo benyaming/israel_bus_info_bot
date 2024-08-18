@@ -1,5 +1,6 @@
+from __future__ import annotations
+
 from datetime import datetime
-from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -7,31 +8,11 @@ from pydantic import BaseModel, Field
 __all__ = ['Stop', 'Route', 'IncomingRoute', 'IncomingRoutesResponse', 'StopLocation']
 
 
-class IncomingRoutesResponse(BaseModel):
-    response_time: datetime = Field(default_factory=datetime.now)
-    stop_info: 'Stop'
-    incoming_routes: List['IncomingRoute']
-
-
 class Agency(BaseModel):
     id: int
     name: str
     url: str
     phone: str
-
-
-class Stop(BaseModel):
-    id: int
-    code: int
-    name: str
-    city: str | None
-    street: Optional[str] = None
-    floor: Optional[str] = None
-    platform: Optional[str] = None
-    location: 'StopLocation'
-    location_type: str
-    parent_station_id: Optional[str] = None
-    zone_id: Optional[str] = None
 
 
 class Route(BaseModel):
@@ -49,14 +30,29 @@ class Route(BaseModel):
 
 class IncomingRoute(BaseModel):
     eta: int
-    route: 'Route'
+    route: Route
 
 
 class StopLocation(BaseModel):
     type: str = 'Point'
-    coordinates: List[float]
+    coordinates: list[float]
 
 
-IncomingRoutesResponse.update_forward_refs()
-Stop.update_forward_refs()
+class Stop(BaseModel):
+    id: int
+    code: int
+    name: str
+    city: str | None
+    street: str | None = None
+    floor: str | None = None
+    platform: str | None = None
+    location: StopLocation
+    location_type: str
+    parent_station_id: str | None = None
+    zone_id: str | None = None
 
+
+class IncomingRoutesResponse(BaseModel):
+    response_time: datetime = Field(default_factory=datetime.now)
+    stop_info: Stop
+    incoming_routes: list[IncomingRoute]

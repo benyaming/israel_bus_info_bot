@@ -1,38 +1,34 @@
-from typing import Optional
-
-from pydantic import BaseSettings, Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Env(BaseSettings):
-    class Config:
-        env_file = '.env'
-        env_file_encoding = 'utf-8'
+    model_config = SettingsConfigDict(env_file='.env', env_file_encoding='utf-8')
 
-    TOKEN: str = Field(env='TOKEN')
+    TOKEN: str
 
-    WEBAPP_HOST: Optional[str] = Field(None, env='WEBAPP_HOST')
-    WEBAPP_PORT: Optional[int] = Field(None, env='WEBAPP_PORT')
-    WEBHOOK_PATH: Optional[str] = Field(None, env='WEBHOOK_PATH')
-    WEBHOOK_URL: Optional[str] = Field(None, env='WEBHOOK_URL')
+    WEBAPP_HOST: str | None = None
+    WEBAPP_PORT: int | None = None
+    WEBHOOK_PATH: str | None = None
+    WEBHOOK_URL: str | None = None
 
-    DOCKER_MODE: bool = Field(False, env='DOCKER_MODE')
+    DOCKER_MODE: bool = False
 
-    DB_URL: str = Field('localhost', env='DB_URL')
-    DB_NAME: str = Field(..., env='DB_NAME')
-    DB_COLLECTION_NAME: str = Field(..., env='DB_COLLECTION_NAME')
+    DB_URL: str = 'localhost'
+    DB_NAME: str
+    DB_COLLECTION_NAME: str
 
-    PERIOD: int = Field(5, env='PERIOD')  # how often message updates (seconds)
-    TTL: int = Field(5, env='TTL')  # how long message updates (seconds)
+    API_URL: str
+    MAPBOX_TOKEN: str
 
-    METRICS_DSN: Optional[str] = Field(None, env='METRICS_DSN')
-    METRICS_TABLE_NAME: Optional[str] = Field(None, env='METRICS_TABLE_NAME')
+    PERIOD: int = 5  # how often message updates (seconds)
+    TTL: int = 5  # how long message updates (seconds)
 
-    SENTRY_KEY: Optional[str] = Field(None, env='SENTRY_KEY')
-    API_URL: str = Field(..., env='API_URL')
-    MAPBOX_TOKEN: str = Field(..., env='MAPBOX_TOKEN')
+    THROTTLE_QUANTITY: int = 30
+    THROTTLE_PERIOD: int = 3
 
-    THROTTLE_QUANTITY: int = Field(30, env='THROTTLE_QUANTITY')
-    THROTTLE_PERIOD: int = Field(3, env='THROTTLE_PERIOD')
+    METRICS_DSN: str | None = None
+    METRICS_TABLE_NAME: str | None = None
+    SENTRY_KEY: str | None = None
 
 
 env = Env()

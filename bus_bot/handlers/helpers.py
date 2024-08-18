@@ -1,5 +1,5 @@
 import aiogram_metrics
-from aiogram.dispatcher import FSMContext
+from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove
 
 from bus_bot import texts
@@ -12,5 +12,5 @@ async def incorrect_message_handler(msg: Message):
 
 @aiogram_metrics.track('Cancel')
 async def on_cancel(msg: Message, state: FSMContext):
-    await state.finish()
+    await state.clear()
     await msg.reply(texts.cancel, reply_markup=ReplyKeyboardRemove())
