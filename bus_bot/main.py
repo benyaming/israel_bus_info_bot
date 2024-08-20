@@ -48,8 +48,12 @@ async def on_start(bot: Bot):
     await bot.set_my_commands(DEFAULT_COMMANDS)
 
 
-async def main():
+async def async_main(dp: Dispatcher, bot: Bot):
+    await bot.delete_webhook()
+    await dp.start_polling(bot, allowed_updates=ALLOWED_UPDATES)
 
+
+def main():
     motor_client = AsyncIOMotorClient(env.DB_URL)
     storage = MongoStorage(client=motor_client, db_name=env.DB_NAME, collection_name=env.DB_COLLECTION_NAME)
     db_repo = DbRepo(motor_client)
@@ -85,7 +89,7 @@ async def main():
 
         web.run_app(app, host=env.WEBAPP_HOST, port=env.WEBAPP_PORT)
     else:
-        await dp.start_polling(bot, allowed_updates=ALLOWED_UPDATES)
+        asyncio.run(async_main(dp, bot))
 
 
 if __name__ == '__main__':
@@ -94,4 +98,4 @@ if __name__ == '__main__':
 
         asyncio.set_event_loop_policy(WindowsSelectorEventLoopPolicy())
 
-    asyncio.run(main())
+    main()
