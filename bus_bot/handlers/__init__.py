@@ -7,14 +7,12 @@ from bus_bot.clients.bus_api.exceptions import StationNonExistsError, ApiNotResp
 from bus_bot.exceptions import StopAlreadySaved
 from bus_bot.handlers import errors
 from bus_bot.handlers.forms import router as forms_router
-from bus_bot.handlers.helpers import incorrect_message_handler, on_cancel
+from bus_bot.handlers.helpers import incorrect_message_router, cancel_router
 from bus_bot.handlers.commands import router as commands_router
 from bus_bot.handlers.bus_handlers import router as bus_handlers_router
 
 
 __all__ = ['register_handlers']
-
-from .. import texts
 
 
 def register_handlers(dp: Dispatcher):
@@ -27,8 +25,8 @@ def register_handlers(dp: Dispatcher):
     dp.error.register(errors.on_err_stop_already_saved, ExceptionTypeFilter(StopAlreadySaved))
     dp.error.register(errors.on_err_unknown_exception, ExceptionTypeFilter(Exception))  # Should be last in this list!
 
-    dp.message.register(helpers.on_cancel, F.text.startswith(texts.cancel_button))  # Should be first after error handlers!
+    dp.include_router(cancel_router)  # Should be first after error handlers!
     dp.include_router(commands_router)
     dp.include_router(bus_handlers_router)
     dp.include_router(forms_router)
-    dp.message.register(helpers.incorrect_message_handler)
+    dp.include_router(incorrect_message_router)

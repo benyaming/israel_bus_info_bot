@@ -1,10 +1,10 @@
 import asyncio
-import httpx
 import os
 
 import aiogram_metrics
 import sentry_sdk
 import betterlogging as bl
+import httpx
 from aiohttp import web
 from aiogram import Dispatcher, Bot
 from aiogram.fsm.storage.mongo import MongoStorage
@@ -19,6 +19,9 @@ from bus_bot.handlers.commands import DEFAULT_COMMANDS
 from bus_bot.config import env
 from bus_bot.repository.user_repository import DbRepo
 from bus_bot.service.watcher_management_service import WatcherManager
+
+
+ALLOWED_UPDATES = ['message', 'callback_query', 'inline_query', 'edited_message', 'chosen_inline_result']
 
 
 bl.basic_colorized_config(level=bl.INFO)
@@ -60,7 +63,7 @@ async def main():
 
         # context objects
         db_repo=db_repo,
-        http_client=session,
+        http_session=session,
         watcher_manager=wm,
     )
 
@@ -82,7 +85,7 @@ async def main():
 
         web.run_app(app, host=env.WEBAPP_HOST, port=env.WEBAPP_PORT)
     else:
-        await dp.start_polling(bot)
+        await dp.start_polling(bot, allowed_updates=ALLOWED_UPDATES)
 
 
 if __name__ == '__main__':

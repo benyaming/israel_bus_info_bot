@@ -14,6 +14,6 @@ async def check_user_middleware(handler: Callable[[Update, Any], Awaitable], eve
         return await handler(event, data)
 
     db_repo: DbRepo = data['db_repo']
-    await db_repo.check_user(user)
+    await db_repo.check_user(user, event)
 
     return await handler(event, data)

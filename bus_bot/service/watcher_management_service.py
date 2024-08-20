@@ -1,13 +1,13 @@
 import asyncio
 from contextlib import suppress
-from time import monotonic
+from dataclasses import dataclass
 from datetime import datetime as dt
+from time import monotonic
 
 from aiogram import Bot
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.types import User
 from httpx import AsyncClient
-from pydantic import BaseModel
 import betterlogging as logging
 
 from bus_bot.config import env
@@ -32,15 +32,16 @@ logger.setLevel(logging.DEBUG)
 #         raise NotImplemented
 
 
+@dataclass
 class Watcher:
     user: User
     stop_code: int
     message_id: int
-    updates_count: int = UPDATES_COUNT
-    updated_at: float = 1
     bot: Bot
     db_repo: DbRepo
     session: AsyncClient
+    updates_count: int = UPDATES_COUNT
+    updated_at: float = 1
 
     async def run_update(self, is_last_update: bool = False):
         logger.trace(f'Updating watcher: {self.user=}, {self.message_id=}')

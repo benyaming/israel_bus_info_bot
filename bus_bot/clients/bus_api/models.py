@@ -16,7 +16,7 @@ class Agency(BaseModel):
 
 
 class Route(BaseModel):
-    id: str
+    id: int
     agency: Agency
     short_name: str
     from_stop_name: str
@@ -24,7 +24,7 @@ class Route(BaseModel):
     from_city: str
     to_city: str
     description: str
-    type: str
+    type: int
     color: str
 
 
@@ -47,9 +47,9 @@ class Stop(BaseModel):
     floor: str | None = None
     platform: str | None = None
     location: StopLocation
-    location_type: str
+    location_type: int
     parent_station_id: str | None = None
-    zone_id: str | None = None
+    zone_id: int | None = None
 
 
 class IncomingRoutesResponse(BaseModel):

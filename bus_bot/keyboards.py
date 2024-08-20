@@ -1,4 +1,4 @@
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton
 
 from bus_bot import texts
 from bus_bot.helpers import CallbackPrefix
@@ -28,7 +28,7 @@ def get_done_button_with_placeholder(placeholder_text: str) -> ReplyKeyboardMark
         resize_keyboard=True,
         one_time_keyboard=False,
         input_field_placeholder=placeholder_text,
-        keyboard=[[texts.cancel_button, texts.done_button]]
+        keyboard=[[KeyboardButton(text=texts.cancel_button), KeyboardButton(text=texts.done_button)]]
     )
     return kb
 

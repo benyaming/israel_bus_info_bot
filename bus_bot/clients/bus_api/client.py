@@ -13,8 +13,8 @@ __all__ = ['find_near_stops', 'prepare_station_schedule', 'get_stop_info']
 logger = logging.getLogger('bus_api_client')
 
 TRANSPORT_ICONS = {
-    '2': '🚄',
-    '3': '🚌'
+    2: '🚄',
+    3: '🚌'
 }
 
 

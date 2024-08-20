@@ -1,7 +1,7 @@
 from datetime import datetime as dt
 
 import aiogram_metrics
-from aiogram.types import User as TelegramUser
+from aiogram.types import User as TelegramUser, Update
 from motor.motor_asyncio import AsyncIOMotorClient
 from odmantic import AIOEngine
 
@@ -26,7 +26,7 @@ class DbRepo:
     def __init__(self, motor_client: AsyncIOMotorClient):
         self.db = AIOEngine(motor_client, database=env.DB_NAME)
 
-    async def check_user(self, tg_user: TelegramUser) -> None:
+    async def check_user(self, tg_user: TelegramUser, event: Update | None = None) -> None:
         user = await self.db.find(User, User.id == tg_user.id)
 
         if user:
@@ -40,7 +40,8 @@ class DbRepo:
                 locale=tg_user.language_code
             )
             user = User(id=tg_user.id, personal_details=pd)
-            aiogram_metrics.manual_track('New user Joined')
+
+            aiogram_metrics.manual_track('New user Joined', update=event, user_id=tg_user.id)
 
         await self.db.save(user)
 
