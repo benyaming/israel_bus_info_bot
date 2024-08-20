@@ -8,7 +8,7 @@ authors = [
 
 dependencies = [
     "aiogram==3.11.0",
-    "aiogram-metrics==1.0.4",
+    "aiogram-metrics==2.0.0",
     "betterlogging==0.2.1",
     "pydantic==2.8.2",
     "pydantic-settings==2.4.0",
