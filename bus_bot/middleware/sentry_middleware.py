@@ -1,16 +1,14 @@
+from typing import Callable, Any, Awaitable
+
 import sentry_sdk
-from aiogram.dispatcher.middlewares import BaseMiddleware
 from aiogram.types import Update
 
 
-class SentryContextMiddleware(BaseMiddleware):
-
-    @staticmethod
-    async def on_pre_process_update(update: Update, _):
-        if (not update.message) and (not update.callback_query):
-            return
-
+async def sentry_context_middleware(handler: Callable[[Update, Any], Awaitable], event: Update, data: Any):
+    if event.message or event.callback_query:
         sentry_sdk.set_user({
-            'id': (update.message or update.callback_query).from_user.id,
-            'update': update.to_python()
+            'id': (event.message or event.callback_query).from_user.id,
+            'update': event.model_dump()
         })
+
+    return await handler(event, data)

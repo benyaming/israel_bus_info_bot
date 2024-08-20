@@ -1,16 +1,15 @@
 import json
 import logging
 from io import BytesIO
-from typing import List, Tuple
 from urllib.parse import quote
 
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from httpx import AsyncClient
 
 from bus_bot.config import env
 from bus_bot.clients.bus_api.client import find_near_stops
 from bus_bot.clients.bus_api.exceptions import NoStopsError
 from bus_bot.clients.bus_api.models import Stop
-from bus_bot.misc import session
 from bus_bot.helpers import CallbackPrefix
 
 
@@ -31,7 +30,7 @@ def _get_marker_color(stop: Stop) -> str:
     return color
 
 
-def _get_encoded_geojson_from_stops(stops: List[Stop]) -> str:
+def _get_encoded_geojson_from_stops(stops: list[Stop]) -> str:
     features = []
     for i, stop in enumerate(stops, 1):
         features.append(
@@ -51,18 +50,22 @@ def _get_encoded_geojson_from_stops(stops: List[Stop]) -> str:
     return quote(json.dumps(geojson))
 
 
-def _get_kb_for_stops(stops: List[Stop]) -> InlineKeyboardMarkup:
-    kb = InlineKeyboardMarkup()
+def _get_kb_for_stops(stops: list[Stop]) -> InlineKeyboardMarkup:
+    rows = []
     for i, stop in enumerate(stops, 1):
-        kb.row(InlineKeyboardButton(
-            text=f'{i} — {stop.name} ({stop.code})',
-            callback_data=f'{CallbackPrefix.get_stop}{stop.code}'
-        ))
-    return kb
+        rows.append(
+            [
+                InlineKeyboardButton(
+                    text=f'{i} — {stop.name} ({stop.code})',
+                    callback_data=f'{CallbackPrefix.get_stop}{stop.code}'
+                )
+            ]
+        )
+    return InlineKeyboardMarkup(inline_keyboard=rows)
 
 
-async def get_map_with_points(lat: float, lng: float) -> Tuple[BytesIO, InlineKeyboardMarkup]:
-    stops = await find_near_stops(lat, lng)
+async def get_map_with_points(lat: float, lng: float, session: AsyncClient) -> tuple[BytesIO, InlineKeyboardMarkup]:
+    stops = await find_near_stops(lat, lng, session)
     if len(stops) == 0:
         raise NoStopsError
 

@@ -1,53 +1,54 @@
 import logging
 
 import sentry_sdk
-from aiogram.types import Message, User, CallbackQuery
+from aiogram.exceptions import TelegramBadRequest
+from aiogram.types import ErrorEvent, Message, CallbackQuery
 
 from bus_bot import texts
 from bus_bot.clients.bus_api.exceptions import BotError
-from bus_bot.misc import bot
 
 
 logger = logging.getLogger(__file__)
 
 
-async def on_err_not_modified(*_):
-    return True
+async def on_err_not_modified(_, event: ErrorEvent):
+    e: TelegramBadRequest = event.exception
+    print('todo')
+    print(e)
 
 
-async def on_err_station_not_exists(*_):
-    msg = Message.get_current()
-    await msg.reply(texts.invalid_station)
-    return True
+async def on_err_station_not_exists(_, message: Message):
+    await message.reply(texts.invalid_station)
 
 
-async def on_err_not_stations_found(*_):
-    msg = Message.get_current()
-    await msg.reply(texts.no_stops_found)
-    return True
+async def on_err_not_stations_found(_, message: Message):
+    await message.reply(texts.no_stops_found)
 
 
-async def on_err_api_not_responding(*_):
-    msg = Message.get_current()
-    await msg.reply(texts.api_not_responding)
-    return True
+async def on_err_api_not_responding(_, message: Message):
+    await message.reply(texts.api_not_responding)
 
 
 async def on_err_api_timeout(*_):
-    return True
+    # todo
+    print('todo - on_err_api_timeout')
 
 
-async def on_err_stop_already_saved(*_):
-    call = CallbackQuery.get_current()
-    await call.answer(texts.stop_already_saved)
-    return True
+async def on_err_stop_already_saved(_, callback_query: CallbackQuery):
+    await callback_query.answer(texts.stop_already_saved)
 
 
-async def on_err_unknown_exception(_, e: Exception):
-    if isinstance(e, BotError):
-        return True
+async def on_err_unknown_exception(event: ErrorEvent):
+    if isinstance(event.exception, BotError):
+        return
 
-    await bot.send_message(User.get_current().id, texts.unknown_exception)
-    logger.exception(e)
-    sentry_sdk.capture_exception(e)
-    return True
+    if event.update.message:
+        user = event.update.message.from_user
+    elif event.update.callback_query:
+        user = event.update.callback_query.from_user
+    else:
+        raise event.exception
+
+    event.bot and await event.bot.send_message(user.id, texts.unknown_exception)
+    logger.exception(event.exception)
+    sentry_sdk.capture_exception(event.exception)

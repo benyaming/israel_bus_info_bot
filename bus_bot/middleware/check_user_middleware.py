@@ -1,24 +1,19 @@
-from aiogram.dispatcher.middlewares import BaseMiddleware
+from typing import Callable, Any, Awaitable
+
 from aiogram.types import Update
 
-from bus_bot.repository.user_repository import check_user
+from bus_bot.repository.user_repository import DbRepo
 
 
-class CheckUserMiddleware(BaseMiddleware):
+async def check_user_middleware(handler: Callable[[Update, Any], Awaitable], event: Update, data: Any):
+    if event.message:
+        user = event.message.from_user
+    elif event.callback_query:
+        user = event.callback_query.from_user
+    else:
+        return await handler(event, data)
 
-    @staticmethod
-    async def on_pre_process_update(update: Update, _):
-        if update.message:
-            user = update.message.from_user
-        elif update.callback_query:
-            user = update.callback_query.from_user
-        else:
-            return
+    db_repo: DbRepo = data['db_repo']
+    await db_repo.check_user(user, event)
 
-        await check_user(
-            user_id=user.id,
-            first_name=user.first_name,
-            last_name=user.last_name,
-            username=user.username,
-            locale=user.language_code
-        )
+    return await handler(event, data)

@@ -1,11 +1,10 @@
 import logging
-from typing import List
 
-from pydantic import parse_obj_as
+from pydantic import TypeAdapter
+from httpx import AsyncClient
 
 from bus_bot.clients.bus_api.exceptions import exception_by_codes, ApiNotRespondingError, ApiTimeoutError
 from bus_bot.clients.bus_api.models import IncomingRoutesResponse, Stop, IncomingRoute
-from bus_bot.misc import session
 from bus_bot.config import env
 
 
@@ -14,8 +13,8 @@ __all__ = ['find_near_stops', 'prepare_station_schedule', 'get_stop_info']
 logger = logging.getLogger('bus_api_client')
 
 TRANSPORT_ICONS = {
-    '2': '🚄',
-    '3': '🚌'
+    2: '🚄',
+    3: '🚌'
 }
 
 
@@ -39,7 +38,7 @@ def _format_lines(routes: list[IncomingRoute]) -> list[str]:
     return lines
 
 
-async def _get_lines_for_station(station_id: int) -> IncomingRoutesResponse:
+async def _get_lines_for_station(station_id: int, session: AsyncClient) -> IncomingRoutesResponse:
     url = f'{env.API_URL}/siri/get_routes_for_stop/{station_id}'
 
     try:
@@ -52,7 +51,7 @@ async def _get_lines_for_station(station_id: int) -> IncomingRoutesResponse:
         logging.error((resp.read()).decode('utf-8'))
         try:
             body = resp.json()
-        except Exception as e:
+        except Exception as _:
             raise ApiTimeoutError
         resp.raise_for_status()
 
@@ -67,7 +66,7 @@ async def _get_lines_for_station(station_id: int) -> IncomingRoutesResponse:
     return arriving_lines
 
 
-async def find_near_stops(lat: float, lng: float) -> List[Stop]:
+async def find_near_stops(lat: float, lng: float, session: AsyncClient) -> list[Stop]:
     url = f'{env.API_URL}/stop/near'
     params = {'lat': lat, 'lng': lng, 'radius': 200}
 
@@ -87,15 +86,15 @@ async def find_near_stops(lat: float, lng: float) -> List[Stop]:
     resp.raise_for_status()
 
     data = resp.json()
-    stops = parse_obj_as(List[Stop], data)
+    stops = TypeAdapter(list[Stop]).validate_python(data)
 
     # temporary solution to delete stops with same id (such as central stations platforms)
     unique_stops = {stop.code: stop for stop in stops}
     return list(unique_stops.values())
 
 
-async def prepare_station_schedule(station_id: int, is_last_update: bool = False) -> str:
-    arriving_lines = await _get_lines_for_station(station_id)
+async def prepare_station_schedule(station_id: int, session: AsyncClient, is_last_update: bool = False) -> str:
+    arriving_lines = await _get_lines_for_station(station_id, session)
     response_lines = [f'<b>{arriving_lines.stop_info.name} ({arriving_lines.stop_info.code})</b>\n']
 
     if arriving_lines.incoming_routes:
@@ -111,7 +110,7 @@ async def prepare_station_schedule(station_id: int, is_last_update: bool = False
     return response
 
 
-async def get_stop_info(stop_code: int) -> Stop:
+async def get_stop_info(stop_code: int, session: AsyncClient) -> Stop:
     url = f'{env.API_URL}/stop/by_code/{stop_code}'
 
     try:
