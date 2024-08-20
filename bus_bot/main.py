@@ -36,39 +36,31 @@ if env.SENTRY_KEY:
 logger.info(f'Sentry is {"ENABLED" if env.SENTRY_KEY else "DISABLED"}')
 
 
-async def on_start(bot: Bot):
+async def on_start(bot: Bot, watcher_manager: WatcherManager):
     logger.info('STARTING BUS BOT...')
+    await bot.delete_webhook(drop_pending_updates=True)
+
     if env.DOCKER_MODE:
-        await bot.delete_webhook(drop_pending_updates=True)
         await bot.set_webhook(env.WEBHOOK_URL)
 
     if env.METRICS_DSN and env.METRICS_TABLE_NAME:
         await aiogram_metrics.register(env.METRICS_DSN, env.METRICS_TABLE_NAME)
 
     await bot.set_my_commands(DEFAULT_COMMANDS)
-
-
-async def async_main(dp: Dispatcher, bot: Bot):
-    await bot.delete_webhook()
-    await dp.start_polling(bot, allowed_updates=ALLOWED_UPDATES)
+    watcher_manager.run_in_background()
 
 
 def main():
     motor_client = AsyncIOMotorClient(env.DB_URL)
     storage = MongoStorage(client=motor_client, db_name=env.DB_NAME, collection_name=env.DB_COLLECTION_NAME)
-    db_repo = DbRepo(motor_client)
-
-    session = httpx.AsyncClient()
-    wm = WatcherManager()
-    wm.run_in_background()
 
     dp = Dispatcher(
         storage=storage,
 
         # context objects
-        db_repo=db_repo,
-        http_session=session,
-        watcher_manager=wm,
+        db_repo=DbRepo(motor_client),
+        http_session=httpx.AsyncClient(),
+        watcher_manager=WatcherManager(),
     )
 
     register_handlers(dp)
@@ -89,7 +81,7 @@ def main():
 
         web.run_app(app, host=env.WEBAPP_HOST, port=env.WEBAPP_PORT)
     else:
-        asyncio.run(async_main(dp, bot))
+        asyncio.run(dp.start_polling(bot, allowed_updates=ALLOWED_UPDATES))
 
 
 if __name__ == '__main__':
