@@ -162,7 +162,8 @@ class WatcherManager:
                 limiter.put()
 
     def run_in_background(self):
-        self.__worker = asyncio.create_task(self._run_worker())
+        loop = asyncio.get_event_loop()
+        self.__worker = loop.create_task(self._run_worker())
 
     async def close(self):
         self.__worker.cancel()
