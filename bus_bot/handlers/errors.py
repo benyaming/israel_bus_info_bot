@@ -44,10 +44,10 @@ async def on_err_api_timeout(event: ErrorEvent):
         await event.update.callback_query.answer(texts.api_not_responding, show_alert=True)
 
 
-async def on_err_stop_already_saved(event: ErrorEvent, update: Update):
-    if update.message:
-        await update.message.reply(texts.stop_already_saved)
-    elif update.callback_query:
+async def on_err_stop_already_saved(event: ErrorEvent):
+    if event.update.message:
+        await event.update.message.reply(texts.stop_already_saved)
+    elif event.update.callback_query:
         await event.update.callback_query.answer(texts.stop_already_saved)
 
 
