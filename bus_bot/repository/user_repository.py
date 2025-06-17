@@ -57,11 +57,11 @@ class DbRepo:
         user = await self.get_user(tg_user)
         return user.saved_stops
 
-    async def save_stop(self, tg_user: TelegramUser, stop_code: int, stop_name: str) -> list[SavedStop]:
+    async def save_stop(self, tg_user: TelegramUser, stop_id: int, stop_name: str) -> list[SavedStop]:
         user = await self.get_user(tg_user)
 
-        stop = SavedStop(name=stop_name, code=stop_code)
-        if user.is_stop_already_saved(stop_code):
+        stop = SavedStop(name=stop_name, id=stop_id)
+        if user.is_stop_already_saved(stop_id):
             raise StopAlreadySaved()
 
         user.saved_stops.append(stop)
@@ -69,9 +69,9 @@ class DbRepo:
         await self.db.save(user)
         return user.saved_stops
 
-    async def rename_stop(self, tg_user: TelegramUser, stop_code: int, new_name: str) -> list[SavedStop]:
+    async def rename_stop(self, tg_user: TelegramUser, stop_id: int, new_name: str) -> list[SavedStop]:
         user = await self.get_user(tg_user)
-        stop = list(filter(lambda s: s.code == stop_code, user.saved_stops))
+        stop = list(filter(lambda s: s.id == stop_id, user.saved_stops))
         if not stop:
             raise ValueError('Trying to update non-existing saved stop!')
 
@@ -81,9 +81,9 @@ class DbRepo:
         await self.db.save(user)
         return user.saved_stops
 
-    async def remove_stop(self, tg_user: TelegramUser, stop_code: int) -> list[SavedStop]:
+    async def remove_stop(self, tg_user: TelegramUser, stop_id: int) -> list[SavedStop]:
         user = await self.get_user(tg_user)
-        stop = list(filter(lambda s: s.code == stop_code, user.saved_stops))
+        stop = list(filter(lambda s: s.id == stop_id, user.saved_stops))
         if not stop:
             raise ValueError('Trying to delete non-existing saved stop!')
 
