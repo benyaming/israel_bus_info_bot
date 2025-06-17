@@ -1,6 +1,8 @@
 [project]
 name = ""
-version = ""
+version = "2.5.0"
+requires-python = ">=3.12"
+license = {text = "MIT"}
 description = ""
 authors = [
     {name = "benyamin ginzburg", email = "benyamin+git@ginzburg.io"},
@@ -19,19 +21,4 @@ dependencies = [
     "setuptools",
 ]
 
-requires-python = ">=3.12"
-license = {text = "MIT"}
 
-[tool.pdm]
-[[tool.pdm.source]]
-url = "https://pypi.org/simple"
-verify_ssl = true
-name = "pypi"
-
-[tool.pdm.dev-dependencies]
-dev = [
-]
-
-[build-system]
-requires = ["pdm-backend"]
-build-backend = "pdm.backend"

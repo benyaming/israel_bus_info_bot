@@ -11,8 +11,8 @@ from httpx import AsyncClient
 import betterlogging as logging
 
 from bus_bot.config import env
-from bus_bot.clients.bus_api import prepare_station_schedule
-from bus_bot.keyboards import get_kb_for_stop
+from bus_bot.clients.bus_api import prepare_stop_schedule
+from bus_bot.keyboards import get_kb_for_stop, get_restart_stop_updating_kb
 from bus_bot.repository.user_repository import DbRepo
 
 UPDATES_COUNT = env.TTL // env.PERIOD
@@ -22,20 +22,10 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
-# class BaseWatcher(BaseModel):
-#     user: User
-#     message_id: int
-#     updates_count = UPDATES_COUNT
-#     updated_at: float = 1
-#
-#     def run_update(self, is_last_update: bool = False):
-#         raise NotImplemented
-
-
 @dataclass
 class Watcher:
     user: User
-    stop_code: int
+    stop_id: int
     message_id: int
     bot: Bot
     db_repo: DbRepo
@@ -45,12 +35,16 @@ class Watcher:
 
     async def run_update(self, is_last_update: bool = False):
         logger.trace(f'Updating watcher: {self.user=}, {self.message_id=}')
-        content = await prepare_station_schedule(self.stop_code, self.session, is_last_update)
+        content = await prepare_stop_schedule(self.stop_id, self.session, is_last_update)
         user = await self.db_repo.get_user(self.user)
 
-        is_stop_saved = user.is_stop_already_saved(self.stop_code)
-        kb = get_kb_for_stop(self.stop_code, is_saved=is_stop_saved) if not is_last_update else None
-
+        is_stop_saved = user.is_stop_already_saved(self.stop_id)
+        
+        if not is_last_update:
+            kb = get_kb_for_stop(self.stop_id, is_saved=is_stop_saved)
+        else:
+            kb = get_restart_stop_updating_kb(self.stop_id)
+    
         try:
             await self.bot.edit_message_text(content, chat_id=self.user.id, message_id=self.message_id, reply_markup=kb)
         except TelegramBadRequest:  # todo check error status code
@@ -79,6 +73,7 @@ class WatcherRepository:
         oldest_watcher = min(self.__storage.values(), key=lambda w: w.updated_at)
         if dt.now().timestamp() - oldest_watcher.updated_at >= env.PERIOD:
             return oldest_watcher
+        return None
 
 
 class Limiter:
@@ -131,35 +126,42 @@ class WatcherManager:
 
     async def _run_worker(self):
         while True:
-            if not limiter.check():
-                logger.warning('Trottling limit reached, skip iteration...')
-                await asyncio.sleep(0.1)
-                continue
-
-            for message_id in self.__to_delete.copy():
-                try:
-                    w = await self.watcher_repository.get_watcher(message_id)
-                    if not w:
-                        logger.warning('Failed to get the worker for deletion!')
-                    else:
-                        w.updated_at = 0
-                        await self.watcher_repository.save_watcher(w)
-                except Exception as e:
-                    logger.exception(f'Error while processting deletion: {repr(e)}')
-                else:
-                    self.__to_delete.remove(message_id)
-
-            watcher = await self.watcher_repository.get_situable_watcher()
-            if not watcher:
-                await asyncio.sleep(0.1)
-                continue
-
             try:
-                await self._process_watcher(watcher)
+                if not limiter.check():
+                    logger.warning('Trottling limit reached, skip iteration...')
+                    await asyncio.sleep(0.1)
+                    continue
+            
+                for message_id in self.__to_delete.copy():
+                    try:
+                        w = await self.watcher_repository.get_watcher(message_id)
+                        if not w:
+                            logger.warning('Failed to get the worker for deletion!')
+                        else:
+                            w.updated_at = 0
+                            await self.watcher_repository.save_watcher(w)
+                    except Exception as e:
+                        logger.exception(f'Error while processting deletion: {repr(e)}')
+                    else:
+                        self.__to_delete.remove(message_id)
+
+                watcher = await self.watcher_repository.get_situable_watcher()
+                if not watcher:
+                    await asyncio.sleep(0.1)
+                    continue
+
+                try:
+                    await self._process_watcher(watcher)
+                except Exception as e:
+                    logger.exception(e)
+                finally:
+                    limiter.put()
+    
+            except asyncio.CancelledError:
+                raise
             except Exception as e:
-                logger.exception(e)
-            finally:
-                limiter.put()
+                logger.exception(f'Unhandled error in watcher worker: {repr(e)}')
+                await asyncio.sleep(1)
 
     def run_in_background(self):
         self.__worker = asyncio.create_task(self._run_worker())
@@ -170,13 +172,13 @@ class WatcherManager:
             await self.__worker
 
     async def add_watch(
-            self,
-            user: User,
-            stop_code: int,
-            message_id: int,
-            bot: Bot,
-            db_repo: DbRepo,
-            session: AsyncClient
+        self,
+        user: User,
+        stop_id: int,
+        message_id: int,
+        bot: Bot,
+        db_repo: DbRepo,
+        session: AsyncClient
     ):
         active_watchers = await self.watcher_repository.find_watchers_by_user_id(user.id)
         for watcher in active_watchers:
@@ -185,7 +187,7 @@ class WatcherManager:
         now = dt.now().timestamp()
         watcher = Watcher(
             user=user,
-            stop_code=stop_code,
+            stop_id=stop_id,
             message_id=message_id,
             updated_at=now,
             bot=bot,

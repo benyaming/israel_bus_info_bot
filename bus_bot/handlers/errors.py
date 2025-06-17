@@ -1,8 +1,7 @@
 import logging
 
 import sentry_sdk
-from aiogram.exceptions import TelegramBadRequest
-from aiogram.types import ErrorEvent, Message, CallbackQuery
+from aiogram.types import ErrorEvent, Message, CallbackQuery, Update
 
 from bus_bot import texts
 from bus_bot.clients.bus_api.exceptions import BotError
@@ -11,31 +10,45 @@ from bus_bot.clients.bus_api.exceptions import BotError
 logger = logging.getLogger(__file__)
 
 
-async def on_err_not_modified(_, event: ErrorEvent):
-    e: TelegramBadRequest = event.exception
+async def on_err_not_modified(event: ErrorEvent, update: Update):
     print('todo')
-    print(e)
+    print(event)
 
 
-async def on_err_station_not_exists(_, message: Message):
-    await message.reply(texts.invalid_station)
+async def on_err_station_not_exists(event: ErrorEvent):
+    if event.update.message:
+        await event.update.message.reply(texts.invalid_station)
+    elif event.update.callback_query:
+        await event.update.callback_query.answer(texts.invalid_station, show_alert=True)
 
 
-async def on_err_not_stations_found(_, message: Message):
-    await message.reply(texts.no_stops_found)
+async def on_err_not_stations_found(event: ErrorEvent):
+    if event.update.message:
+        await event.update.message.reply(texts.no_stops_found)
+    elif event.update.callback_query:
+        await event.update.callback_query.answer(texts.no_stops_found, show_alert=True)
 
 
-async def on_err_api_not_responding(_, message: Message):
-    await message.reply(texts.api_not_responding)
+async def on_err_api_not_responding(event: ErrorEvent):
+    if event.update.message:
+        await event.update.message.reply(texts.api_not_responding)
+    elif event.update.callback_query:
+        await event.update.callback_query.answer(texts.api_not_responding, show_alert=True)
 
 
-async def on_err_api_timeout(*_):
-    # todo
+async def on_err_api_timeout(event: ErrorEvent):
     print('todo - on_err_api_timeout')
+    if event.update.message:
+        await event.update.message.reply(texts.api_not_responding)
+    elif event.update.callback_query:
+        await event.update.callback_query.answer(texts.api_not_responding, show_alert=True)
 
 
-async def on_err_stop_already_saved(_, callback_query: CallbackQuery):
-    await callback_query.answer(texts.stop_already_saved)
+async def on_err_stop_already_saved(event: ErrorEvent):
+    if event.update.message:
+        await event.update.message.reply(texts.stop_already_saved)
+    elif event.update.callback_query:
+        await event.update.callback_query.answer(texts.stop_already_saved)
 
 
 async def on_err_unknown_exception(event: ErrorEvent):

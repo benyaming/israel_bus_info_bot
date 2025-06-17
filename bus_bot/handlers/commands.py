@@ -2,7 +2,7 @@ import aiogram_metrics
 from aiogram import Bot, Router
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message, BotCommand
+from aiogram.types import Message, BotCommand, ReplyKeyboardRemove
 
 from bus_bot import texts
 from bus_bot.keyboards import get_saved_stops_kb
@@ -19,7 +19,7 @@ DEFAULT_COMMANDS = [
 @aiogram_metrics.track('/start command')
 async def on_start_command(message: Message, state: FSMContext, bot: Bot):
     await state.clear()
-    await bot.send_message(message.chat.id, texts.start_command)
+    await bot.send_message(message.chat.id, texts.start_command, reply_markup=ReplyKeyboardRemove())
 
 
 @aiogram_metrics.track('/help command')

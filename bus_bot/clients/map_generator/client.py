@@ -3,14 +3,11 @@ import logging
 from io import BytesIO
 from urllib.parse import quote
 
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.types import InlineKeyboardMarkup
 from httpx import AsyncClient
 
 from bus_bot.config import env
-from bus_bot.clients.bus_api.client import find_near_stops
-from bus_bot.clients.bus_api.exceptions import NoStopsError
-from bus_bot.clients.bus_api.models import Stop
-from bus_bot.helpers import CallbackPrefix
+from bus_bot.clients.bus_api.models import Stop, StopType
 
 
 __all__ = ['get_map_with_points']
@@ -20,19 +17,24 @@ logger = logging.getLogger('map_generator_client')
 MAP_ZOOM = 15.5
 STILE_ID = 'mapbox/streets-v11'
 IMG_SIZE = '500x500'
+IMG_SIZE_LARGE = '850x850'
 
 
-def _get_marker_color(stop: Stop) -> str:
-    if stop.floor == 'תחנת רכבת' or stop.city is None:
-        color = '#066ed6'
-    else:
-        color = 'd60606'
-    return color
+MARKER_COLORS = {
+    StopType.gush_dan_light_rail_station: '#a611a1',
+    StopType.jerusalem_light_rail_stop: '#FF7C2C',
+    StopType.railway_station: '#066ed6',
+    StopType.bus_stop: '#d60606',
+    StopType.bus_central_station: '#078f04'
+}
 
 
 def _get_encoded_geojson_from_stops(stops: list[Stop]) -> str:
     features = []
-    for i, stop in enumerate(stops, 1):
+    
+    unique_stops = {stop.code: stop for stop in stops}
+    
+    for i, stop in enumerate(unique_stops.values(), 1):
         features.append(
             {
                 'type': 'Feature',
@@ -41,7 +43,7 @@ def _get_encoded_geojson_from_stops(stops: list[Stop]) -> str:
                     'coordinates': [stop.location.coordinates[1], stop.location.coordinates[0]]
                 },
                 'properties': {
-                    'marker-color': _get_marker_color(stop),
+                    'marker-color': MARKER_COLORS.get(stop.stop_type, '#d60606'),
                     'marker-symbol': str(i)
                 }
             }
@@ -50,25 +52,7 @@ def _get_encoded_geojson_from_stops(stops: list[Stop]) -> str:
     return quote(json.dumps(geojson))
 
 
-def _get_kb_for_stops(stops: list[Stop]) -> InlineKeyboardMarkup:
-    rows = []
-    for i, stop in enumerate(stops, 1):
-        rows.append(
-            [
-                InlineKeyboardButton(
-                    text=f'{i} — {stop.name} ({stop.code})',
-                    callback_data=f'{CallbackPrefix.get_stop}{stop.code}'
-                )
-            ]
-        )
-    return InlineKeyboardMarkup(inline_keyboard=rows)
-
-
-async def get_map_with_points(lat: float, lng: float, session: AsyncClient) -> tuple[BytesIO, InlineKeyboardMarkup]:
-    stops = await find_near_stops(lat, lng, session)
-    if len(stops) == 0:
-        raise NoStopsError
-
+async def get_map_with_points(stops: list[Stop], session: AsyncClient) -> tuple[BytesIO, InlineKeyboardMarkup]:
     params = {
         'access_token': env.MAPBOX_TOKEN
     }
@@ -76,7 +60,9 @@ async def get_map_with_points(lat: float, lng: float, session: AsyncClient) -> t
     geojson_query = _get_encoded_geojson_from_stops(stops)
     map_query = f'auto'
     # map_query = f'{lng},{lat},{MAP_ZOOM},0,0'
-    url = f'https://api.mapbox.com/styles/v1/{STILE_ID}/static/geojson({geojson_query})/{map_query}/{IMG_SIZE}'
+    img_size = IMG_SIZE_LARGE if len(stops) > 10 else IMG_SIZE
+    
+    url = f'https://api.mapbox.com/styles/v1/{STILE_ID}/static/geojson({geojson_query})/{map_query}/{img_size}'
 
     try:
         resp = await session.get(url, params=params)
@@ -92,5 +78,11 @@ async def get_map_with_points(lat: float, lng: float, session: AsyncClient) -> t
     io.write(resp.read())
     io.seek(0)
 
-    kb = _get_kb_for_stops(stops)
-    return io, kb
+    return io
+
+
+'''
+# todo
+platform kb
+marker colors
+'''

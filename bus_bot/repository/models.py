@@ -14,7 +14,7 @@ class PersonalDetails(EmbeddedModel):
 
 class SavedStop(EmbeddedModel):
     name: str
-    code: int
+    id: int
 
 
 class User(Model):
@@ -24,5 +24,5 @@ class User(Model):
     personal_details: PersonalDetails
     saved_stops: list[SavedStop] = Field(default_factory=list)
 
-    def is_stop_already_saved(self, stop_code: int) -> bool:
-        return any([stop for stop in self.saved_stops if stop.code == stop_code])
+    def is_stop_already_saved(self, stop_id: int) -> bool:
+        return any([stop for stop in self.saved_stops if stop.id == stop_id])
