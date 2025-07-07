@@ -53,8 +53,10 @@ def filter_out_unsupported_stop_types(stops: list[Stop]) -> list[Stop]:
 async def _get_lines_for_stop(stop_id: int, session: AsyncClient) -> IncomingRoutesResponse:
     url = f'{env.API_URL}/siri/get_routes_for_stop_by_id/{stop_id}'
 
+    params = {'monitoring_interval': env.MONITORING_INTERVAL} 
+
     try:
-        resp = await session.get(url)
+        resp = await session.get(url, params=params)
     except Exception as e:
         logger.error(f'{e}: failed to open api url [{url}]!')
         raise ApiNotRespondingError()
