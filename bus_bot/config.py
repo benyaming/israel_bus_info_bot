@@ -30,5 +30,7 @@ class Env(BaseSettings):
     METRICS_TABLE_NAME: str | None = None
     SENTRY_KEY: str | None = None
 
+    MONITORING_INTERVAL: int = 30
+
 
 env = Env()
