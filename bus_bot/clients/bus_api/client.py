@@ -54,7 +54,6 @@ async def _get_lines_for_stop(stop_id: int, session: AsyncClient) -> IncomingRou
     url = f'{env.API_URL}/siri/get_routes_for_stop_by_id/{stop_id}'
 
     params = {'monitoring_interval': env.MONITORING_INTERVAL} 
-    logging.info(f'{params=}')
 
     try:
         resp = await session.get(url, params=params)
